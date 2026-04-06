@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${{ values.applicationName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: ${{ values.applicationName }}
+    team: ${{ values.team }}
+    version: "${{ values.version }}"
+    managed-by: backstage
+  annotations:
+    description: "Deployment for ${{ values.applicationName }} version ${{ values.version }}"
+spec:
+  replicas: ${{ values.replicas }}
+  selector:
+    matchLabels:
+      app: ${{ values.applicationName }}
+  template:
+    metadata:
+      labels:
+        app: ${{ values.applicationName }}
+        team: ${{ values.team }}
+        version: "${{ values.version }}"
+    spec:
+      containers:
+      - name: ${{ values.applicationName }}
+        image: ${{ values.image }}
+        ports:
+        - containerPort: ${{ values.containerPort }}
+          name: http
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "${{ values.cpuRequest }}"
+            memory: "${{ values.memoryRequest }}"
+          limits:
+            cpu: "${{ values.cpuLimit }}"
+            memory: "${{ values.memoryLimit }}"
+        env:
+        - name: APP_VERSION
+          value: "${{ values.version }}"
+        - name: ENVIRONMENT
+          value: "${{ values.environment }}"
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3

@@ -1,0 +1,58 @@
+{%- if values.enableCloudSQL %}
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLInstance
+metadata:
+  name: ${{ values.environmentName }}-db
+  namespace: config-connector
+  annotations:
+    cnrm.cloud.google.com/project-id: ${{ values.gcpProject }}
+spec:
+  databaseVersion: POSTGRES_15
+  region: us-central1
+  settings:
+    tier: db-f1-micro
+    diskSize: 10
+    diskType: PD_SSD
+    backupConfiguration:
+      enabled: true
+      startTime: "03:00"
+    ipConfiguration:
+      ipv4Enabled: true
+      authorizedNetworks:
+        - name: allow-all
+          value: 0.0.0.0/0
+    locationPreference:
+      zone: us-central1-a
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLDatabase
+metadata:
+  name: ${{ values.environmentName }}-maindb
+  namespace: config-connector
+spec:
+  instanceRef:
+    name: ${{ values.environmentName }}-db
+---
+apiVersion: sql.cnrm.cloud.google.com/v1beta1
+kind: SQLUser
+metadata:
+  name: ${{ values.environmentName }}-dbuser
+  namespace: config-connector
+spec:
+  instanceRef:
+    name: ${{ values.environmentName }}-db
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: ${{ values.environmentName }}-db-secret
+        key: password
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${{ values.environmentName }}-db-secret
+  namespace: config-connector
+type: Opaque
+stringData:
+  password: "changeme-generate-secure-password"
+{%- endif %}

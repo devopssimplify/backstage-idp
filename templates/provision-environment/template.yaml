@@ -1,0 +1,99 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: provision-environment
+  title: Provision New Environment
+  description: Create a new environment with namespace and infrastructure resources in GKE
+  tags:
+    - gcp
+    - kubernetes
+    - environment
+spec:
+  owner: platform-team
+  type: infrastructure
+
+  parameters:
+    - title: Environment Information
+      required:
+        - environmentName
+        - team
+      properties:
+        environmentName:
+          title: Environment Name
+          type: string
+          description: Unique name for the environment (e.g., dev, staging, prod-api)
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:autofocus: true
+        team:
+          title: Team Owner
+          type: string
+          description: Team that owns this environment
+          enum:
+            - platform
+            - backend
+            - frontend
+            - data
+        description:
+          title: Description
+          type: string
+          description: Brief description of the environment purpose
+
+    - title: Infrastructure Resources
+      properties:
+        enableCloudSQL:
+          title: Enable Cloud SQL
+          type: boolean
+          default: false
+          description: Provision a Cloud SQL PostgreSQL instance
+        enableGCS:
+          title: Enable Cloud Storage
+          type: boolean
+          default: false
+          description: Provision a GCS bucket
+        enableMemorystore:
+          title: Enable Memorystore (Redis)
+          type: boolean
+          default: false
+          description: Provision a Memorystore Redis instance
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          environmentName: ${{ parameters.environmentName }}
+          team: ${{ parameters.team }}
+          description: ${{ parameters.description }}
+          enableCloudSQL: ${{ parameters.enableCloudSQL }}
+          enableGCS: ${{ parameters.enableGCS }}
+          enableMemorystore: ${{ parameters.enableMemorystore }}
+          gcpProject: project-7d27fad9-61bb-42c4-b2e
+
+    - id: publish-pr
+      name: Create GitHub Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        branchName: provision-${{ parameters.environmentName }}
+        title: 'feat: Provision ${{ parameters.environmentName }} environment'
+        description: |
+          ## Environment Provisioning Request
+
+          **Environment**: ${{ parameters.environmentName }}
+          **Team**: ${{ parameters.team }}
+          **Description**: ${{ parameters.description }}
+
+          ### Infrastructure Resources
+          - Cloud SQL: ${{ parameters.enableCloudSQL }}
+          - Cloud Storage: ${{ parameters.enableGCS }}
+          - Memorystore: ${{ parameters.enableMemorystore }}
+
+          This PR was created by the Backstage scaffolder.
+        targetPath: .
+
+  output:
+    links:
+      - title: View Pull Request
+        url: ${{ steps['publish-pr'].output.remoteUrl }}

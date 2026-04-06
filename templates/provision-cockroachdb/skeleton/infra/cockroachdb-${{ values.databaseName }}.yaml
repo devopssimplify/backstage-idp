@@ -1,0 +1,301 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cockroachdb-${{ values.databaseName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cockroachdb-${{ values.databaseName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cockroachdb-${{ values.databaseName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cockroachdb-${{ values.databaseName }}
+subjects:
+- kind: ServiceAccount
+  name: cockroachdb-${{ values.databaseName }}
+  namespace: ${{ values.environment }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb-${{ values.databaseName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    description: "CockroachDB public service for ${{ values.databaseName }}"
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "_status/vars"
+    prometheus.io/port: "8080"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: cockroachdb-${{ values.databaseName }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-headless
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    description: "CockroachDB headless service for internal communication"
+    service.alpha.kubernetes.io/tolerate-unready-endpoints: "true"
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "_status/vars"
+    prometheus.io/port: "8080"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - port: 26257
+    targetPort: 26257
+    name: grpc
+  - port: 8080
+    targetPort: 8080
+    name: http
+  selector:
+    app: cockroachdb-${{ values.databaseName }}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-budget
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+spec:
+  selector:
+    matchLabels:
+      app: cockroachdb-${{ values.databaseName }}
+  maxUnavailable: 1
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: cockroachdb-${{ values.databaseName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    description: "${{ values.description }}"
+spec:
+  serviceName: cockroachdb-${{ values.databaseName }}-headless
+  replicas: ${{ values.replicas }}
+  selector:
+    matchLabels:
+      app: cockroachdb-${{ values.databaseName }}
+  template:
+    metadata:
+      labels:
+        app: cockroachdb-${{ values.databaseName }}
+        team: ${{ values.team }}
+    spec:
+      serviceAccountName: cockroachdb-${{ values.databaseName }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - cockroachdb-${{ values.databaseName }}
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:v23.1.11
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: "${{ values.cpuRequest }}"
+            memory: "${{ values.memoryRequest }}"
+          limits:
+            cpu: "${{ values.cpuLimit }}"
+            memory: "${{ values.memoryLimit }}"
+        ports:
+        - containerPort: 26257
+          name: grpc
+        - containerPort: 8080
+          name: http
+        livenessProbe:
+          httpGet:
+            path: "/health"
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: "/health?ready=1"
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: datadir
+          mountPath: /cockroach/cockroach-data
+        env:
+        - name: COCKROACH_CHANNEL
+          value: kubernetes-insecure
+        - name: GOMAXPROCS
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.cpu
+              divisor: "1"
+        - name: MEMORY_LIMIT_MIB
+          valueFrom:
+            resourceFieldRef:
+              resource: limits.memory
+              divisor: "1Mi"
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            {%- if values.replicas == 1 %}
+            # Single node cluster
+            exec /cockroach/cockroach start-single-node \
+            --logtostderr \
+            --insecure \
+            --advertise-host $(hostname -f) \
+            --http-addr 0.0.0.0 \
+            --cache $(expr $MEMORY_LIMIT_MIB / 4)MiB \
+            --max-sql-memory $(expr $MEMORY_LIMIT_MIB / 4)MiB
+            {%- else %}
+            # Multi-node cluster
+            exec /cockroach/cockroach start \
+            --logtostderr \
+            --insecure \
+            --advertise-host $(hostname -f) \
+            --http-addr 0.0.0.0 \
+            --join {% for i in range(values.replicas) %}cockroachdb-${{ values.databaseName }}-{{ i }}.cockroachdb-${{ values.databaseName }}-headless.${{ values.environment }}.svc.cluster.local:26257{% if not loop.last %},{% endif %}{% endfor %} \
+            --cache $(expr $MEMORY_LIMIT_MIB / 4)MiB \
+            --max-sql-memory $(expr $MEMORY_LIMIT_MIB / 4)MiB
+            {%- endif %}
+      terminationGracePeriodSeconds: 60
+      volumes:
+      - name: datadir
+        persistentVolumeClaim:
+          claimName: datadir
+  podManagementPolicy: Parallel
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+      labels:
+        app: cockroachdb-${{ values.databaseName }}
+        team: ${{ values.team }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: "${{ values.storageSize }}"
+      storageClassName: standard-rwo
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-init
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    description: "Initialize CockroachDB cluster"
+spec:
+  template:
+    metadata:
+      labels:
+        app: cockroachdb-${{ values.databaseName }}-init
+    spec:
+      serviceAccountName: cockroachdb-${{ values.databaseName }}
+      restartPolicy: OnFailure
+      containers:
+      - name: cluster-init
+        image: cockroachdb/cockroach:v23.1.11
+        imagePullPolicy: IfNotPresent
+        command:
+          - "/bin/bash"
+          - "-ecx"
+          - |
+            # Wait for DNS to be ready
+            until nslookup cockroachdb-${{ values.databaseName }}-headless.${{ values.environment }}.svc.cluster.local; do
+              echo "Waiting for DNS..."
+              sleep 2
+            done
+
+            {%- if values.replicas > 1 %}
+            # Initialize multi-node cluster
+            echo "Initializing multi-node cluster..."
+            /cockroach/cockroach init \
+            --insecure \
+            --host=cockroachdb-${{ values.databaseName }}-0.cockroachdb-${{ values.databaseName }}-headless.${{ values.environment }}.svc.cluster.local:26257 || true
+            {%- else %}
+            # Single-node cluster auto-initializes
+            echo "Single-node cluster auto-initializes, skipping init..."
+            {%- endif %}
+
+            # Wait for cluster to be ready
+            sleep 10
+
+            # Create default database
+            echo "Creating database ${{ values.databaseName }}..."
+            /cockroach/cockroach sql \
+            --insecure \
+            --host=cockroachdb-${{ values.databaseName }}-0.cockroachdb-${{ values.databaseName }}-headless.${{ values.environment }}.svc.cluster.local:26257 \
+            --execute="CREATE DATABASE IF NOT EXISTS ${{ values.databaseName }};"
+
+            echo "CockroachDB cluster initialized successfully"

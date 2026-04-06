@@ -1,0 +1,44 @@
+{%- if values.enableGCS %}
+apiVersion: storage.cnrm.cloud.google.com/v1beta1
+kind: StorageBucket
+metadata:
+  name: ${{ values.gcpProject }}-${{ values.environmentName }}-data
+  namespace: config-connector
+  annotations:
+    cnrm.cloud.google.com/project-id: ${{ values.gcpProject }}
+spec:
+  location: US-CENTRAL1
+  storageClass: STANDARD
+  uniformBucketLevelAccess: true
+  versioning:
+    enabled: false
+  lifecycleRule:
+    - action:
+        type: Delete
+      condition:
+        age: 90
+        withState: ANY
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMServiceAccount
+metadata:
+  name: ${{ values.environmentName }}-gcs-sa
+  namespace: config-connector
+  annotations:
+    cnrm.cloud.google.com/project-id: ${{ values.gcpProject }}
+spec:
+  displayName: Service Account for ${{ values.environmentName }} GCS access
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicyMember
+metadata:
+  name: ${{ values.environmentName }}-gcs-binding
+  namespace: config-connector
+spec:
+  member: serviceAccount:${{ values.environmentName }}-gcs-sa@${{ values.gcpProject }}.iam.gserviceaccount.com
+  role: roles/storage.objectAdmin
+  resourceRef:
+    apiVersion: storage.cnrm.cloud.google.com/v1beta1
+    kind: StorageBucket
+    name: ${{ values.gcpProject }}-${{ values.environmentName }}-data
+{%- endif %}

@@ -1,0 +1,71 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: delete-infrastructure
+  title: "[Admin] Delete Infrastructure"
+  description: ⚠️ USE ADMINISTRATION MENU - Trigger deletion of infrastructure resources
+  tags:
+    - admin
+spec:
+  owner: platform-team
+  type: admin
+
+  parameters:
+    - title: Resource Information
+      required:
+        - resourceType
+        - resourceName
+        - environment
+      properties:
+        resourceType:
+          title: Resource Type
+          type: string
+          description: Type of resource to delete
+          enum:
+            - CockroachDB Database
+            - Application Deployment
+          ui:autofocus: true
+        resourceName:
+          title: Resource Name
+          type: string
+          description: 'For CockroachDB: database name (e.g., pds-500-db). For Application: enter "app" or namespace name (not used for deletion, just for tracking)'
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          default: app
+        environment:
+          title: Environment/Namespace
+          type: string
+          description: 'For CockroachDB: deployment environment (dev/staging/production). For Application: namespace folder to delete - this deletes entire apps/{namespace}/ folder (e.g., pds-501, pds-500, test-1000)'
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+
+    - title: Confirmation
+      required:
+        - confirmDeletion
+      properties:
+        confirmDeletion:
+          title: Confirm Deletion
+          type: boolean
+          description: I understand this will delete the resource and all associated data
+          default: false
+        reason:
+          title: Deletion Reason
+          type: string
+          description: Why is this resource being deleted?
+
+  steps:
+    - id: trigger-workflow
+      name: Trigger Deletion Workflow
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        workflowId: delete-infra.yml
+        branchOrTagName: main
+        workflowInputs:
+          resourceType: ${{ parameters.resourceType }}
+          resourceName: ${{ parameters.resourceName }}
+          environment: ${{ parameters.environment }}
+          reason: ${{ parameters.reason }}
+
+  output:
+    links:
+      - title: View Workflow Run
+        url: https://github.com/devopssimplify/idp-poc-gitops/actions/workflows/delete-infra.yml

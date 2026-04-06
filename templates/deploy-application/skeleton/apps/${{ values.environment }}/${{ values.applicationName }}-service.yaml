@@ -1,0 +1,23 @@
+{%- if values.enableService %}
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${{ values.applicationName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: ${{ values.applicationName }}
+    team: ${{ values.team }}
+    version: "${{ values.version }}"
+    managed-by: backstage
+  annotations:
+    description: "Service for ${{ values.applicationName }}"
+spec:
+  type: ${{ values.serviceType }}
+  selector:
+    app: ${{ values.applicationName }}
+  ports:
+  - name: http
+    port: ${{ values.servicePort }}
+    targetPort: ${{ values.containerPort }}
+    protocol: TCP
+{%- endif %}

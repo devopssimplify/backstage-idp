@@ -1,0 +1,135 @@
+{%- if values.enableBackups %}
+---
+apiVersion: storage.cnrm.cloud.google.com/v1beta1
+kind: StorageBucket
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-backups
+  namespace: config-connector
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    cnrm.cloud.google.com/project-id: ${{ values.gcpProject }}
+    description: "Backup bucket for CockroachDB ${{ values.databaseName }}"
+spec:
+  location: US
+  storageClass: STANDARD
+  uniformBucketLevelAccess: true
+  versioning:
+    enabled: true
+  lifecycleRule:
+    - action:
+        type: Delete
+      condition:
+        age: 30
+        withState: ANY
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMServiceAccount
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-backup-sa
+  namespace: config-connector
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    cnrm.cloud.google.com/project-id: ${{ values.gcpProject }}
+spec:
+  displayName: "CockroachDB ${{ values.databaseName }} Backup Service Account"
+---
+apiVersion: iam.cnrm.cloud.google.com/v1beta1
+kind: IAMPolicyMember
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-backup-sa-storage
+  namespace: config-connector
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+spec:
+  member: serviceAccount:cockroachdb-${{ values.databaseName }}-backup-sa@${{ values.gcpProject }}.iam.gserviceaccount.com
+  role: roles/storage.objectAdmin
+  resourceRef:
+    apiVersion: storage.cnrm.cloud.google.com/v1beta1
+    kind: StorageBucket
+    name: cockroachdb-${{ values.databaseName }}-backups
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-backup-credentials
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+  annotations:
+    description: "GCS credentials for CockroachDB backups - Update this with actual SA key"
+type: Opaque
+stringData:
+  credentials.json: |
+    {
+      "type": "service_account",
+      "project_id": "${{ values.gcpProject }}",
+      "private_key_id": "REPLACE_WITH_ACTUAL_KEY_ID",
+      "private_key": "REPLACE_WITH_ACTUAL_PRIVATE_KEY",
+      "client_email": "cockroachdb-${{ values.databaseName }}-backup-sa@${{ values.gcpProject }}.iam.gserviceaccount.com"
+    }
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cockroachdb-${{ values.databaseName }}-backup
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+  annotations:
+    description: "Automated backup for CockroachDB ${{ values.databaseName }}"
+spec:
+  schedule: "${{ values.backupSchedule }}"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: cockroachdb-${{ values.databaseName }}-backup
+        spec:
+          serviceAccountName: cockroachdb-${{ values.databaseName }}
+          restartPolicy: OnFailure
+          containers:
+          - name: backup
+            image: cockroachdb/cockroach:v23.1.11
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/gcs/credentials.json
+            - name: BACKUP_TIMESTAMP
+              value: "$(date +%Y%m%d_%H%M%S)"
+            volumeMounts:
+            - name: gcs-credentials
+              mountPath: /secrets/gcs
+              readOnly: true
+            command:
+              - "/bin/bash"
+              - "-ecx"
+              - |
+                TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+                echo "Starting backup at $TIMESTAMP"
+
+                /cockroach/cockroach sql \
+                --insecure \
+                --host=cockroachdb-${{ values.databaseName }}-0.cockroachdb-${{ values.databaseName }}-headless.${{ values.environment }}.svc.cluster.local:26257 \
+                --execute="BACKUP DATABASE ${{ values.databaseName }} TO 'gs://cockroachdb-${{ values.databaseName }}-backups/backups/$TIMESTAMP?AUTH=specified&CREDENTIALS=/secrets/gcs/credentials.json' AS OF SYSTEM TIME '-10s' WITH revision_history;"
+
+                echo "Backup completed successfully to gs://cockroachdb-${{ values.databaseName }}-backups/backups/$TIMESTAMP"
+          volumes:
+          - name: gcs-credentials
+            secret:
+              secretName: cockroachdb-${{ values.databaseName }}-backup-credentials
+{%- endif %}

@@ -1,0 +1,80 @@
+app:
+  title: Internal Developer Platform
+  baseUrl: ${BACKSTAGE_BASE_URL}
+
+organization:
+  name: DevOpsSimplify
+
+backend:
+  baseUrl: ${BACKSTAGE_BASE_URL}
+  listen:
+    port: 7007
+    host: 0.0.0.0
+  csp:
+    connect-src: ["'self'", 'http:', 'https:']
+  cors:
+    origin: ${BACKSTAGE_BASE_URL}
+    methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
+    credentials: true
+  database:
+    client: pg
+    connection:
+      host: ${POSTGRES_HOST}
+      port: ${POSTGRES_PORT}
+      user: ${POSTGRES_USER}
+      password: ${POSTGRES_PASSWORD}
+      database: backstage
+      ssl:
+        rejectUnauthorized: false
+
+integrations:
+  github:
+    - host: github.com
+      token: ${GITHUB_TOKEN}
+
+auth:
+  providers:
+    guest:
+      dangerouslyAllowOutsideDevelopment: true
+
+catalog:
+  import:
+    entityFilename: catalog-info.yaml
+    pullRequestBranchName: backstage-integration
+  rules:
+    - allow: [Component, System, API, Resource, Location, Template, User, Group]
+  locations:
+    - type: file
+      target: ../../templates/provision-environment/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
+      target: ../../templates/deploy-application/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
+      target: ../../templates/provision-cockroachdb/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
+      target: ../../templates/delete-infrastructure/template.yaml
+      rules:
+        - allow: [Template]
+
+scaffolder:
+  defaultAuthor:
+    name: Backstage Scaffolder
+    email: scaffolder@backstage.io
+  defaultCommitMessage: 'Scaffolded by Backstage'
+
+kubernetes:
+  serviceLocatorMethod:
+    type: 'multiTenant'
+  clusterLocatorMethods:
+    - type: 'config'
+      clusters:
+        - url: ${K8S_CLUSTER_URL}
+          name: gke-cluster
+          authProvider: 'serviceAccount'
+          skipTLSVerify: false
+          skipMetricsLookup: true

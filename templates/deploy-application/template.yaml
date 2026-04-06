@@ -1,0 +1,171 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: deploy-application
+  title: Deploy Application
+  description: Deploy an application to a Kubernetes environment
+  tags:
+    - kubernetes
+    - deployment
+    - application
+spec:
+  owner: platform-team
+  type: service
+
+  parameters:
+    - title: Application Information
+      required:
+        - applicationName
+        - environment
+        - version
+      properties:
+        applicationName:
+          title: Application Name
+          type: string
+          description: Name of the application to deploy
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:autofocus: true
+        environment:
+          title: Target Environment
+          type: string
+          description: Environment where the application will be deployed
+          ui:field: EntityPicker
+          ui:options:
+            catalogFilter:
+              kind: Namespace
+        version:
+          title: Application Version
+          type: string
+          description: Version of the application (e.g., v1.0.0, 1.2.3)
+          pattern: '^[a-zA-Z0-9]([a-zA-Z0-9._-]*[a-zA-Z0-9])?$'
+        team:
+          title: Team Owner
+          type: string
+          description: Team that owns this application
+          enum:
+            - platform
+            - backend
+            - frontend
+            - data
+
+    - title: Container Configuration
+      required:
+        - image
+        - containerPort
+      properties:
+        image:
+          title: Container Image
+          type: string
+          description: Full container image path (e.g., gcr.io/project/app:tag)
+        containerPort:
+          title: Container Port
+          type: integer
+          description: Port exposed by the container
+          default: 8080
+        replicas:
+          title: Number of Replicas
+          type: integer
+          description: Number of pod replicas
+          default: 2
+          minimum: 1
+          maximum: 10
+
+    - title: Resource Configuration
+      properties:
+        cpuRequest:
+          title: CPU Request
+          type: string
+          description: CPU request (e.g., 100m, 500m, 1)
+          default: "100m"
+        memoryRequest:
+          title: Memory Request
+          type: string
+          description: Memory request (e.g., 128Mi, 512Mi, 1Gi)
+          default: "128Mi"
+        cpuLimit:
+          title: CPU Limit
+          type: string
+          description: CPU limit (e.g., 500m, 1, 2)
+          default: "500m"
+        memoryLimit:
+          title: Memory Limit
+          type: string
+          description: Memory limit (e.g., 256Mi, 512Mi, 1Gi)
+          default: "512Mi"
+
+    - title: Service Configuration
+      properties:
+        enableService:
+          title: Create Service
+          type: boolean
+          default: true
+          description: Create a Kubernetes Service for the application
+        servicePort:
+          title: Service Port
+          type: integer
+          description: Port exposed by the service
+          default: 80
+        serviceType:
+          title: Service Type
+          type: string
+          description: Type of Kubernetes service
+          enum:
+            - ClusterIP
+            - LoadBalancer
+          default: ClusterIP
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          applicationName: ${{ parameters.applicationName }}
+          environment: ${{ parameters.environment }}
+          version: ${{ parameters.version }}
+          team: ${{ parameters.team }}
+          image: ${{ parameters.image }}
+          containerPort: ${{ parameters.containerPort }}
+          replicas: ${{ parameters.replicas }}
+          cpuRequest: ${{ parameters.cpuRequest }}
+          memoryRequest: ${{ parameters.memoryRequest }}
+          cpuLimit: ${{ parameters.cpuLimit }}
+          memoryLimit: ${{ parameters.memoryLimit }}
+          enableService: ${{ parameters.enableService }}
+          servicePort: ${{ parameters.servicePort }}
+          serviceType: ${{ parameters.serviceType }}
+
+    - id: publish-pr
+      name: Create GitHub Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        branchName: deploy-${{ parameters.applicationName }}-${{ parameters.version }}
+        title: 'feat: Deploy ${{ parameters.applicationName }} version ${{ parameters.version }} to ${{ parameters.environment }}'
+        description: |
+          ## Application Deployment Request
+
+          **Application**: ${{ parameters.applicationName }}
+          **Version**: ${{ parameters.version }}
+          **Environment**: ${{ parameters.environment }}
+          **Team**: ${{ parameters.team }}
+
+          ### Configuration
+          - **Image**: ${{ parameters.image }}
+          - **Replicas**: ${{ parameters.replicas }}
+          - **Container Port**: ${{ parameters.containerPort }}
+          - **Service Port**: ${{ parameters.servicePort }}
+          - **Service Type**: ${{ parameters.serviceType }}
+
+          ### Resources
+          - **CPU Request/Limit**: ${{ parameters.cpuRequest }} / ${{ parameters.cpuLimit }}
+          - **Memory Request/Limit**: ${{ parameters.memoryRequest }} / ${{ parameters.memoryLimit }}
+
+          This PR was created by the Backstage scaffolder.
+        targetPath: .
+
+  output:
+    links:
+      - title: View Pull Request
+        url: ${{ steps['publish-pr'].output.remoteUrl }}

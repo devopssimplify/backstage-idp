@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: idp
+  labels:
+    name: idp
+    purpose: internal-developer-platform

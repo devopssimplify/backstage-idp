@@ -1,0 +1,64 @@
+# Multi-stage Dockerfile for Backstage on GKE
+# This should be executed with the root of the repo as docker context.
+
+FROM node:24-bookworm-slim as packages
+
+WORKDIR /app
+COPY package.json yarn.lock ./
+COPY .yarn ./.yarn
+COPY .yarnrc.yml ./
+COPY backstage.json ./
+
+COPY packages packages
+
+RUN --mount=type=cache,target=/home/node/.cache/yarn,sharing=locked,uid=1000,gid=1000 \
+    yarn install --immutable
+
+COPY . .
+
+RUN yarn tsc
+RUN yarn build:backend --config ../../app-config.yaml --config ../../app-config.gke.yaml
+
+FROM node:24-bookworm-slim
+
+# Install dependencies
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+    python3 g++ build-essential libsqlite3-dev curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set Python interpreter
+ENV PYTHON=/usr/bin/python3
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--no-node-snapshot"
+
+USER node
+WORKDIR /app
+
+# Copy built artifacts
+COPY --from=packages --chown=node:node /app/.yarn ./.yarn
+COPY --from=packages --chown=node:node /app/.yarnrc.yml ./
+COPY --from=packages --chown=node:node /app/backstage.json ./
+COPY --from=packages --chown=node:node /app/yarn.lock /app/package.json ./
+COPY --from=packages --chown=node:node /app/packages/backend/dist/skeleton.tar.gz ./
+RUN tar xzf skeleton.tar.gz && rm skeleton.tar.gz
+
+RUN --mount=type=cache,target=/home/node/.cache/yarn,sharing=locked,uid=1000,gid=1000 \
+    yarn workspaces focus --all --production && rm -rf "$(yarn cache clean)"
+
+COPY --from=packages --chown=node:node /app/packages/backend/dist/bundle.tar.gz ./
+RUN tar xzf bundle.tar.gz && rm bundle.tar.gz
+
+# Copy config files
+COPY --chown=node:node app-config.yaml app-config.gke.yaml ./
+COPY --chown=node:node templates ./templates
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
+    CMD curl -f http://localhost:7007/healthcheck || exit 1
+
+EXPOSE 7007
+
+CMD ["node", "packages/backend", "--config", "app-config.yaml", "--config", "app-config.gke.yaml"]
