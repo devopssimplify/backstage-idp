@@ -57,21 +57,21 @@ spec:
           value: production
         resources:
           requests:
-            memory: "512Mi"
-            cpu: "500m"
+            memory: "256Mi"
+            cpu: "100m"
           limits:
             memory: "1Gi"
             cpu: "1000m"
         livenessProbe:
           httpGet:
-            path: /healthcheck
+            path: /api/health/v1/readiness
             port: 7007
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5
         readinessProbe:
           httpGet:
-            path: /healthcheck
+            path: /api/health/v1/readiness
             port: 7007
           initialDelaySeconds: 30
           periodSeconds: 10

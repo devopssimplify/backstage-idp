@@ -57,7 +57,7 @@ COPY --chown=node:node templates ./templates
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
-    CMD curl -f http://localhost:7007/healthcheck || exit 1
+    CMD curl -f http://localhost:7007/api/health/v1/readiness || exit 1
 
 EXPOSE 7007
 

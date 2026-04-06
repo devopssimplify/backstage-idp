@@ -24,8 +24,6 @@ backend:
       user: ${POSTGRES_USER}
       password: ${POSTGRES_PASSWORD}
       database: backstage
-      ssl:
-        rejectUnauthorized: false
 
 integrations:
   github:
