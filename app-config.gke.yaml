@@ -12,6 +12,9 @@ backend:
     host: 0.0.0.0
   csp:
     connect-src: ["'self'", 'http:', 'https:']
+    upgrade-insecure-requests: false
+  headers:
+    Strict-Transport-Security: false
   cors:
     origin: http://35.188.96.202
     methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
