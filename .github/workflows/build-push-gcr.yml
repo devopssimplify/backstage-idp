@@ -7,7 +7,7 @@ on:
 
 env:
   PROJECT_ID: project-7d27fad9-61bb-42c4-b2e
-  IMAGE: gcr.io/project-7d27fad9-61bb-42c4-b2e/backstage
+  IMAGE: us-central1-docker.pkg.dev/project-7d27fad9-61bb-42c4-b2e/backstage/backstage
   WORKLOAD_IDENTITY_PROVIDER: projects/616359343889/locations/global/workloadIdentityPools/github-pool/providers/github-provider
   SERVICE_ACCOUNT: github-actions-gcr@project-7d27fad9-61bb-42c4-b2e.iam.gserviceaccount.com
 
@@ -29,8 +29,8 @@ jobs:
         workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
         service_account: ${{ env.SERVICE_ACCOUNT }}
 
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker gcr.io --quiet
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
     - name: Build Docker image
       run: |
