@@ -1,19 +1,19 @@
 app:
   title: Internal Developer Platform
-  baseUrl: ${BACKSTAGE_BASE_URL}
+  baseUrl: http://35.188.96.202
 
 organization:
   name: DevOpsSimplify
 
 backend:
-  baseUrl: ${BACKSTAGE_BASE_URL}
+  baseUrl: http://35.188.96.202
   listen:
     port: 7007
     host: 0.0.0.0
   csp:
     connect-src: ["'self'", 'http:', 'https:']
   cors:
-    origin: ${BACKSTAGE_BASE_URL}
+    origin: http://35.188.96.202
     methods: [GET, HEAD, PATCH, POST, PUT, DELETE]
     credentials: true
   database:
