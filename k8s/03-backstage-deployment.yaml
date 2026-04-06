@@ -18,7 +18,7 @@ spec:
       serviceAccountName: backstage
       containers:
       - name: backstage
-        image: us-central1-docker.pkg.dev/project-7d27fad9-61bb-42c4-b2e/backstage/backstage:latest
+        image: gcr.io/project-7d27fad9-61bb-42c4-b2e/backstage:latest
         imagePullPolicy: Always
         ports:
         - name: http
