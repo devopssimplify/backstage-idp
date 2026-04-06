@@ -63,15 +63,13 @@ spec:
             memory: "1Gi"
             cpu: "1000m"
         livenessProbe:
-          httpGet:
-            path: /api/health/v1/readiness
+          tcpSocket:
             port: 7007
           initialDelaySeconds: 60
           periodSeconds: 30
           timeoutSeconds: 5
         readinessProbe:
-          httpGet:
-            path: /api/health/v1/readiness
+          tcpSocket:
             port: 7007
           initialDelaySeconds: 30
           periodSeconds: 10
