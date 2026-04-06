@@ -43,19 +43,19 @@ catalog:
     - allow: [Component, System, API, Resource, Location, Template, User, Group]
   locations:
     - type: file
-      target: ../../templates/provision-environment/template.yaml
+      target: ./templates/provision-environment/template.yaml
       rules:
         - allow: [Template]
     - type: file
-      target: ../../templates/deploy-application/template.yaml
+      target: ./templates/deploy-application/template.yaml
       rules:
         - allow: [Template]
     - type: file
-      target: ../../templates/provision-cockroachdb/template.yaml
+      target: ./templates/provision-cockroachdb/template.yaml
       rules:
         - allow: [Template]
     - type: file
-      target: ../../templates/delete-infrastructure/template.yaml
+      target: ./templates/delete-infrastructure/template.yaml
       rules:
         - allow: [Template]
 
