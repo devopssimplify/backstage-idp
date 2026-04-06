@@ -47,4 +47,5 @@ jobs:
         docker push ${{ env.IMAGE }}:latest
 
     - name: Output image
-      run: echo "Image pushed: ${{ env.IMAGE }}:${{ github.sha }}"
+      run: |
+        echo "Image pushed: ${{ env.IMAGE }}:${{ github.sha }}"
