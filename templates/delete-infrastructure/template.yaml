@@ -23,18 +23,19 @@ spec:
           description: Type of resource to delete
           enum:
             - CockroachDB Database
+            - Kafka Cluster
             - Application Deployment
           ui:autofocus: true
         resourceName:
           title: Resource Name
           type: string
-          description: 'For CockroachDB: database name (e.g., pds-500-db). For Application: enter "app" or namespace name (not used for deletion, just for tracking)'
+          description: 'For CockroachDB: database name (e.g., pds-500-db). For Kafka: cluster name (e.g., my-kafka). For Application: enter "app" or namespace name (not used for deletion, just for tracking)'
           pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
           default: app
         environment:
           title: Environment/Namespace
           type: string
-          description: 'For CockroachDB: deployment environment (dev/staging/production). For Application: namespace folder to delete - this deletes entire apps/{namespace}/ folder (e.g., pds-501, pds-500, test-1000)'
+          description: 'For CockroachDB/Kafka: deployment environment (dev/staging/production). For Application: namespace folder to delete - this deletes entire apps/{namespace}/ folder (e.g., pds-501, pds-500, test-1000)'
           pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
 
     - title: Confirmation

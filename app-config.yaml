@@ -119,6 +119,12 @@ catalog:
       rules:
         - allow: [Template]
 
+    # Provision Kafka template
+    - type: file
+      target: ../../templates/provision-kafka/template.yaml
+      rules:
+        - allow: [Template]
+
     # Delete Infrastructure template
     - type: file
       target: ../../templates/delete-infrastructure/template.yaml

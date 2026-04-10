@@ -58,6 +58,10 @@ catalog:
       rules:
         - allow: [Template]
     - type: file
+      target: ./templates/provision-kafka/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
       target: ./templates/delete-infrastructure/template.yaml
       rules:
         - allow: [Template]
