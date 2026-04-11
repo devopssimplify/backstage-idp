@@ -37,7 +37,6 @@ spec:
       default.replication.factor: 3
       min.insync.replicas: 2
       {%- endif %}
-      inter.broker.protocol.version: "${{ values.kafkaVersion }}"
       log.retention.hours: 168
       log.segment.bytes: 1073741824
     resources:
