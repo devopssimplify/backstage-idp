@@ -15,14 +15,14 @@ spec:
   parameters:
     - title: Cluster Information
       required:
-        - clusterName
+        - namePrefix
         - environment
         - team
       properties:
-        clusterName:
-          title: Cluster Name
+        namePrefix:
+          title: Name Prefix
           type: string
-          description: Name for the Kafka cluster
+          description: Prefix for all resource names (e.g. "pds" creates pds-kafka cluster, pds-kafka-ui pod)
           pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
           ui:autofocus: true
         environment:
@@ -146,6 +146,44 @@ spec:
             - "4Gi"
             - "8Gi"
 
+    - title: Kafka Topics
+      description: Define topics to create in the Kafka cluster (optional)
+      properties:
+        topics:
+          title: Topics
+          type: array
+          description: Kafka topics to create. Leave empty to skip topic creation.
+          items:
+            type: object
+            required:
+              - topicName
+              - partitions
+            properties:
+              topicName:
+                title: Topic Name
+                type: string
+                description: Topic name (alphanumeric, dots, dashes, underscores)
+                pattern: '^[a-zA-Z0-9._-]+$'
+              partitions:
+                title: Partitions
+                type: integer
+                description: Number of partitions
+                default: 3
+                minimum: 1
+                maximum: 100
+              replicationFactor:
+                title: Replication Factor
+                type: integer
+                description: Number of replicas per partition
+                default: 1
+                minimum: 1
+                maximum: 5
+              retentionHours:
+                title: Retention (hours)
+                type: integer
+                description: Message retention period (168 = 7 days, -1 = unlimited)
+                default: 168
+
   steps:
     - id: fetch-base
       name: Fetch Base
@@ -153,7 +191,8 @@ spec:
       input:
         url: ./skeleton
         values:
-          clusterName: ${{ parameters.clusterName }}
+          namePrefix: ${{ parameters.namePrefix }}
+          clusterName: ${{ parameters.namePrefix }}-kafka
           environment: ${{ parameters.environment }}
           team: ${{ parameters.team }}
           description: ${{ parameters.description }}
@@ -166,18 +205,20 @@ spec:
           memoryRequest: ${{ parameters.memoryRequest }}
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
+          topics: ${{ parameters.topics }}
 
     - id: publish-pr
       name: Create GitHub Pull Request
       action: publish:github:pull-request
       input:
         repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
-        branchName: provision-kafka-${{ parameters.clusterName }}
-        title: 'feat: Provision Kafka cluster ${{ parameters.clusterName }} in ${{ parameters.environment }}'
+        branchName: provision-kafka-${{ parameters.namePrefix }}
+        title: 'feat: Provision Kafka cluster ${{ parameters.namePrefix }}-kafka in ${{ parameters.environment }}'
         description: |
           ## Kafka Cluster Provisioning Request
 
-          **Cluster Name**: ${{ parameters.clusterName }}
+          **Name Prefix**: ${{ parameters.namePrefix }}
+          **Cluster Name**: ${{ parameters.namePrefix }}-kafka
           **Environment**: ${{ parameters.environment }}
           **Team**: ${{ parameters.team }}
           **Description**: ${{ parameters.description }}
@@ -194,6 +235,11 @@ spec:
           ### Resources per Broker
           - **CPU Request/Limit**: ${{ parameters.cpuRequest }} / ${{ parameters.cpuLimit }}
           - **Memory Request/Limit**: ${{ parameters.memoryRequest }} / ${{ parameters.memoryLimit }}
+
+          ### Resources Created
+          - Kafka cluster: `${{ parameters.namePrefix }}-kafka`
+          - Kafka UI pod: `${{ parameters.namePrefix }}-kafka-ui`
+          - Topics: ${{ parameters.topics | length if parameters.topics else 0 }}
 
           This PR was created by the Backstage scaffolder.
         targetPath: .

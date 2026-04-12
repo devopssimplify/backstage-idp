@@ -2,10 +2,10 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: kafka-${{ values.clusterName }}
+  name: ${{ values.clusterName }}
   namespace: ${{ values.environment }}
   labels:
-    app: kafka-${{ values.clusterName }}
+    app: ${{ values.clusterName }}
     team: ${{ values.team }}
     managed-by: backstage
   annotations:
@@ -73,11 +73,11 @@ spec:
                       - key: app
                         operator: In
                         values:
-                          - kafka-${{ values.clusterName }}
+                          - ${{ values.clusterName }}
                   topologyKey: kubernetes.io/hostname
         metadata:
           labels:
-            app: kafka-${{ values.clusterName }}
+            app: ${{ values.clusterName }}
             team: ${{ values.team }}
   zookeeper:
     replicas: ${{ values.zookeeperNodes }}
@@ -97,7 +97,7 @@ spec:
       pod:
         metadata:
           labels:
-            app: kafka-${{ values.clusterName }}
+            app: ${{ values.clusterName }}
             team: ${{ values.team }}
   entityOperator:
     topicOperator:
