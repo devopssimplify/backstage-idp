@@ -116,3 +116,12 @@ spec:
         limits:
           cpu: "200m"
           memory: "256Mi"
+    template:
+      topicOperatorContainer:
+        env:
+          - name: STRIMZI_KUBERNETES_VERSION
+            value: "major=1,minor=31"
+      userOperatorContainer:
+        env:
+          - name: STRIMZI_KUBERNETES_VERSION
+            value: "major=1,minor=31"
