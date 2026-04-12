@@ -1,0 +1,18 @@
+{%- for topic in values.topics %}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: ${{ values.namePrefix }}-{{ topic.topicName }}
+  namespace: ${{ values.environment }}
+  labels:
+    strimzi.io/cluster: ${{ values.clusterName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+spec:
+  partitions: {{ topic.partitions }}
+  replicas: {{ topic.replicationFactor | default(1) }}
+  config:
+    retention.ms: "{{ (topic.retentionHours | default(168)) * 3600000 }}"
+    segment.bytes: "1073741824"
+{%- endfor %}

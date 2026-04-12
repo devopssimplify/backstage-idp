@@ -1,0 +1,122 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: provision-kafka-topics
+  title: Provision Kafka Topics
+  description: Create Kafka topics in an existing Strimzi Kafka cluster
+  tags:
+    - kafka
+    - messaging
+    - kubernetes
+spec:
+  owner: platform-team
+  type: infrastructure
+
+  parameters:
+    - title: Target Cluster
+      required:
+        - namePrefix
+        - environment
+        - team
+      properties:
+        namePrefix:
+          title: Cluster Name Prefix
+          type: string
+          description: The name prefix of the existing Kafka cluster (e.g. "pds" targets the pds-kafka cluster)
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:autofocus: true
+        environment:
+          title: Environment
+          type: string
+          description: Namespace where the Kafka cluster runs
+          enum:
+            - dev
+            - staging
+            - production
+        team:
+          title: Team Owner
+          type: string
+          description: Team requesting the topics
+          enum:
+            - platform
+            - backend
+            - frontend
+            - data
+
+    - title: Kafka Topics
+      required:
+        - topics
+      properties:
+        topics:
+          title: Topics
+          type: array
+          description: One or more Kafka topics to create
+          minItems: 1
+          items:
+            type: object
+            required:
+              - topicName
+              - partitions
+            properties:
+              topicName:
+                title: Topic Name
+                type: string
+                description: Topic name (alphanumeric, dots, dashes, underscores)
+                pattern: '^[a-zA-Z0-9._-]+$'
+              partitions:
+                title: Partitions
+                type: integer
+                description: Number of partitions
+                default: 3
+                minimum: 1
+                maximum: 100
+              replicationFactor:
+                title: Replication Factor
+                type: integer
+                description: Number of replicas per partition
+                default: 1
+                minimum: 1
+                maximum: 5
+              retentionHours:
+                title: Retention (hours)
+                type: integer
+                description: Message retention period in hours (168 = 7 days, -1 = unlimited)
+                default: 168
+
+  steps:
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          namePrefix: ${{ parameters.namePrefix }}
+          clusterName: ${{ parameters.namePrefix }}-kafka
+          environment: ${{ parameters.environment }}
+          team: ${{ parameters.team }}
+          topics: ${{ parameters.topics }}
+
+    - id: publish-pr
+      name: Create GitHub Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        branchName: provision-kafka-topics-${{ parameters.namePrefix }}-${{ parameters.environment }}
+        title: 'feat: Create Kafka topics on ${{ parameters.namePrefix }}-kafka in ${{ parameters.environment }}'
+        description: |
+          ## Kafka Topics Provisioning Request
+
+          **Cluster**: `${{ parameters.namePrefix }}-kafka`
+          **Environment**: ${{ parameters.environment }}
+          **Team**: ${{ parameters.team }}
+
+          ### Topics
+          ${{ parameters.topics | dump }}
+
+          This PR was created by the Backstage scaffolder.
+        targetPath: .
+
+  output:
+    links:
+      - title: View Pull Request
+        url: ${{ steps['publish-pr'].output.remoteUrl }}
