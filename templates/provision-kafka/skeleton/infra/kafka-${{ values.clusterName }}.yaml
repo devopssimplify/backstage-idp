@@ -39,6 +39,16 @@ spec:
       {%- endif %}
       log.retention.hours: 168
       log.segment.bytes: 1073741824
+    livenessProbe:
+      initialDelaySeconds: 120
+      timeoutSeconds: 5
+      periodSeconds: 20
+      failureThreshold: 3
+    readinessProbe:
+      initialDelaySeconds: 120
+      timeoutSeconds: 5
+      periodSeconds: 20
+      failureThreshold: 3
     resources:
       requests:
         cpu: "${{ values.cpuRequest }}"
