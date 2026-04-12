@@ -108,6 +108,16 @@ spec:
         limits:
           cpu: "200m"
           memory: "256Mi"
+      livenessProbe:
+        initialDelaySeconds: 120
+        timeoutSeconds: 5
+        periodSeconds: 20
+        failureThreshold: 3
+      readinessProbe:
+        initialDelaySeconds: 120
+        timeoutSeconds: 5
+        periodSeconds: 20
+        failureThreshold: 3
     userOperator:
       resources:
         requests:
@@ -116,32 +126,22 @@ spec:
         limits:
           cpu: "200m"
           memory: "256Mi"
+      livenessProbe:
+        initialDelaySeconds: 120
+        timeoutSeconds: 5
+        periodSeconds: 20
+        failureThreshold: 3
+      readinessProbe:
+        initialDelaySeconds: 120
+        timeoutSeconds: 5
+        periodSeconds: 20
+        failureThreshold: 3
     template:
       topicOperatorContainer:
         env:
           - name: STRIMZI_KUBERNETES_VERSION
             value: "major=1,minor=31"
-        livenessProbe:
-          initialDelaySeconds: 120
-          timeoutSeconds: 5
-          periodSeconds: 20
-          failureThreshold: 3
-        readinessProbe:
-          initialDelaySeconds: 120
-          timeoutSeconds: 5
-          periodSeconds: 20
-          failureThreshold: 3
       userOperatorContainer:
         env:
           - name: STRIMZI_KUBERNETES_VERSION
             value: "major=1,minor=31"
-        livenessProbe:
-          initialDelaySeconds: 120
-          timeoutSeconds: 5
-          periodSeconds: 20
-          failureThreshold: 3
-        readinessProbe:
-          initialDelaySeconds: 120
-          timeoutSeconds: 5
-          periodSeconds: 20
-          failureThreshold: 3
