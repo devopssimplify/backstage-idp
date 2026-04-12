@@ -121,7 +121,27 @@ spec:
         env:
           - name: STRIMZI_KUBERNETES_VERSION
             value: "major=1,minor=31"
+        livenessProbe:
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 20
+          failureThreshold: 3
+        readinessProbe:
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 20
+          failureThreshold: 3
       userOperatorContainer:
         env:
           - name: STRIMZI_KUBERNETES_VERSION
             value: "major=1,minor=31"
+        livenessProbe:
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 20
+          failureThreshold: 3
+        readinessProbe:
+          initialDelaySeconds: 120
+          timeoutSeconds: 5
+          periodSeconds: 20
+          failureThreshold: 3
