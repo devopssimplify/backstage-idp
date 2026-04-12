@@ -1,0 +1,78 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: delete-kafka-topics
+  title: "[Admin] Delete Kafka Topics"
+  description: "⚠️ Permanently delete all Kafka topics for a cluster"
+  tags:
+    - kafka
+    - admin
+    - delete
+spec:
+  owner: platform-team
+  type: admin
+
+  parameters:
+    - title: Target Cluster
+      required:
+        - namePrefix
+        - environment
+      properties:
+        namePrefix:
+          title: Cluster Name Prefix
+          type: string
+          description: Name prefix of the Kafka cluster whose topics will be deleted (e.g. "pds" deletes all topics in pds-kafka)
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:autofocus: true
+        environment:
+          title: Environment
+          type: string
+          description: Namespace where the Kafka cluster is running
+          enum:
+            - dev
+            - staging
+            - production
+        reason:
+          title: Deletion Reason
+          type: string
+          description: Why are these Kafka topics being deleted?
+
+    - title: Confirm Deletion
+      required:
+        - confirmDeletion
+      properties:
+        confirmDeletion:
+          title: "I understand this will permanently delete all Kafka topics and their messages"
+          type: boolean
+          default: false
+          ui:widget: checkbox
+
+  steps:
+    - id: verify-confirmation
+      name: Verify Confirmation
+      action: debug:log
+      input:
+        message: "Deletion confirmed for Kafka topics on cluster ${{ parameters.namePrefix }}-kafka in ${{ parameters.environment }}"
+
+    - id: trigger-workflow
+      name: Trigger Deletion Workflow
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        workflowId: delete-kafka-topics.yml
+        branchOrTagName: main
+        workflowInputs:
+          namePrefix: ${{ parameters.namePrefix }}
+          environment: ${{ parameters.environment }}
+          reason: ${{ parameters.reason }}
+
+  output:
+    text:
+      - title: Resources Being Deleted
+        content: |
+          - Topics file: `infra/kafka-topics-${{ parameters.namePrefix }}.yaml`
+          - Cluster: `${{ parameters.namePrefix }}-kafka`
+          - Namespace: `${{ parameters.environment }}`
+    links:
+      - title: View Workflow Run
+        url: https://github.com/devopssimplify/idp-poc-gitops/actions/workflows/delete-kafka-topics.yml

@@ -137,6 +137,18 @@ catalog:
       rules:
         - allow: [Template]
 
+    # Delete Kafka Cluster template
+    - type: file
+      target: ../../templates/delete-kafka-cluster/template.yaml
+      rules:
+        - allow: [Template]
+
+    # Delete Kafka Topics template
+    - type: file
+      target: ../../templates/delete-kafka-topics/template.yaml
+      rules:
+        - allow: [Template]
+
     # Local example organizational data
     - type: file
       target: ../../examples/org.yaml

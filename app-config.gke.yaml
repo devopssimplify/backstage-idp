@@ -69,6 +69,14 @@ catalog:
       target: ./templates/delete-infrastructure/template.yaml
       rules:
         - allow: [Template]
+    - type: file
+      target: ./templates/delete-kafka-cluster/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
+      target: ./templates/delete-kafka-topics/template.yaml
+      rules:
+        - allow: [Template]
 
 scaffolder:
   defaultAuthor:
