@@ -53,10 +53,11 @@ spec:
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
-        workflowId: delete-kafka-cluster.yml
+        workflowId: delete-infra.yml
         branchOrTagName: main
         workflowInputs:
-          namePrefix: ${{ parameters.namePrefix }}
+          resourceType: Kafka Cluster
+          resourceName: ${{ parameters.namePrefix }}
           environment: ${{ parameters.environment }}
           reason: ${{ parameters.reason if parameters.reason else 'No reason provided' }}
 
@@ -69,4 +70,4 @@ spec:
           - Namespace: `${{ parameters.environment }}`
     links:
       - title: View Workflow Run
-        url: https://github.com/devopssimplify/idp-poc-gitops/actions/workflows/delete-kafka-cluster.yml
+        url: https://github.com/devopssimplify/idp-poc-gitops/actions/workflows/delete-infra.yml
