@@ -48,12 +48,6 @@ spec:
           ui:widget: checkbox
 
   steps:
-    - id: verify-confirmation
-      name: Verify Confirmation
-      action: debug:log
-      input:
-        message: "Deletion confirmed for Kafka cluster ${{ parameters.namePrefix }}-kafka in ${{ parameters.environment }}"
-
     - id: trigger-workflow
       name: Trigger Deletion Workflow
       action: github:actions:dispatch
@@ -64,7 +58,7 @@ spec:
         workflowInputs:
           namePrefix: ${{ parameters.namePrefix }}
           environment: ${{ parameters.environment }}
-          reason: ${{ parameters.reason }}
+          reason: ${{ parameters.reason if parameters.reason else 'No reason provided' }}
 
   output:
     text:
