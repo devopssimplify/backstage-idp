@@ -43,11 +43,6 @@ spec:
             - backend
             - frontend
             - data
-        schemaName:
-          title: Schema Name
-          type: string
-          description: Logical schema/database name inside CockroachDB (leave blank to use database name)
-          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
 
     - title: Tables
       required:
@@ -109,7 +104,7 @@ spec:
         url: ./skeleton
         values:
           databaseName: ${{ parameters.databaseName }}
-          schemaName: ${{ parameters.schemaName if parameters.schemaName else parameters.databaseName }}
+          schemaName: ${{ parameters.databaseName }}
           environment: ${{ parameters.environment }}
           team: ${{ parameters.team }}
           tables: ${{ parameters.tables }}
