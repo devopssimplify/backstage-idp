@@ -11,13 +11,5 @@ metadata:
 spec:
   connection:
     postgres:
-      host:
-        value: cockroachdb-${{ values.databaseName }}.${{ values.environment }}.svc.cluster.local
-      port:
-        value: "26257"
-      user:
-        value: root
-      dbname:
-        value: ${{ values.schemaName }}
-      sslmode:
-        value: disable
+      uri:
+        value: postgresql://root@cockroachdb-${{ values.databaseName }}.${{ values.environment }}.svc.cluster.local:26257/${{ values.schemaName }}?sslmode=disable
