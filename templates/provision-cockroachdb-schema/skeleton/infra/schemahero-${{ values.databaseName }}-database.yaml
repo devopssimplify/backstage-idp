@@ -13,7 +13,8 @@ spec:
     postgres:
       host:
         value: cockroachdb-${{ values.databaseName }}.${{ values.environment }}.svc.cluster.local
-      port: 26257
+      port:
+        value: "26257"
       user:
         value: root
       password:
