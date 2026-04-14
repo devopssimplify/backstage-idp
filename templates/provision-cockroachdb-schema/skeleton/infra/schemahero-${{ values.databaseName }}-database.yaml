@@ -18,6 +18,7 @@ spec:
         value: root
       password:
         value: ""
-      database:
+      dbname:
         value: ${{ values.schemaName }}
-      sslmode: disable
+      sslmode:
+        value: disable
