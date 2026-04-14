@@ -17,8 +17,6 @@ spec:
         value: "26257"
       user:
         value: root
-      password:
-        value: ""
       dbname:
         value: ${{ values.schemaName }}
       sslmode:
