@@ -58,6 +58,10 @@ catalog:
       rules:
         - allow: [Template]
     - type: file
+      target: ./templates/provision-cockroachdb-schema/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
       target: ./templates/provision-kafka/template.yaml
       rules:
         - allow: [Template]

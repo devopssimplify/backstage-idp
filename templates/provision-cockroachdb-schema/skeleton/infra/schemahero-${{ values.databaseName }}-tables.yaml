@@ -1,0 +1,42 @@
+{%- for table in values.tables %}
+---
+apiVersion: schemas.schemahero.io/v1alpha4
+kind: Table
+metadata:
+  name: ${{ values.databaseName }}-${{ table.tableName }}
+  namespace: ${{ values.environment }}
+  labels:
+    app: cockroachdb-${{ values.databaseName }}
+    team: ${{ values.team }}
+    managed-by: backstage
+spec:
+  database: ${{ values.databaseName }}
+  name: ${{ table.tableName }}
+  schema:
+    postgres:
+      primaryKey:
+        - id
+      columns:
+        - name: id
+          type: uuid
+          constraints:
+            notNull: true
+        - name: created_at
+          type: timestamp
+          constraints:
+            notNull: true
+        - name: updated_at
+          type: timestamp
+          constraints:
+            notNull: true
+{%- if table.columns %}
+{%- for col in table.columns %}
+        - name: ${{ col.name }}
+          type: ${{ col.type }}
+{%- if col.notNull %}
+          constraints:
+            notNull: true
+{%- endif %}
+{%- endfor %}
+{%- endif %}
+{%- endfor %}
