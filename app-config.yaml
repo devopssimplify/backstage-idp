@@ -119,12 +119,6 @@ catalog:
       rules:
         - allow: [Template]
 
-    # Provision CockroachDB Schema template
-    - type: file
-      target: ../../templates/provision-cockroachdb-schema/template.yaml
-      rules:
-        - allow: [Template]
-
     # Provision Kafka template
     - type: file
       target: ../../templates/provision-kafka/template.yaml
