@@ -1,0 +1,12 @@
+---
+# Creates a long-lived token for the backstage ServiceAccount.
+# This is referenced by backstage-secrets.K8S_SERVICE_ACCOUNT_TOKEN.
+# Apply once: kubectl apply -f k8s/05-backstage-sa-token.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: backstage-sa-token
+  namespace: idp
+  annotations:
+    kubernetes.io/service-account.name: backstage
+type: kubernetes.io/service-account-token

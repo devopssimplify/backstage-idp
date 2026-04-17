@@ -53,6 +53,11 @@ spec:
               key: POSTGRES_PASSWORD
         - name: K8S_CLUSTER_URL
           value: "https://kubernetes.default.svc"
+        - name: K8S_SERVICE_ACCOUNT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: backstage-secrets
+              key: K8S_SERVICE_ACCOUNT_TOKEN
         - name: NODE_ENV
           value: production
         resources:
