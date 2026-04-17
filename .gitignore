@@ -60,5 +60,5 @@ e2e-test-report/
 .cache/
 app-config.local.yaml
 01-secrets-generated.yaml
-cloudbuild.yaml
+# cloudbuild.yaml
 /tmp/

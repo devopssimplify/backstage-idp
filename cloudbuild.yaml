@@ -1,0 +1,42 @@
+steps:
+  # Step 1: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    env:
+      - 'DOCKER_BUILDKIT=1'
+    args:
+      - build
+      - '--progress=plain'
+      - '-t'
+      - 'gcr.io/project-7d27fad9-61bb-42c4-b2e/backstage:latest'
+      - '-f'
+      - 'Dockerfile.gke'
+      - '.'
+
+  # Step 2: Push the image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - push
+      - 'gcr.io/project-7d27fad9-61bb-42c4-b2e/backstage:latest'
+
+  # Step 3: Deploy to GKE
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - rollout
+      - restart
+      - deployment/backstage
+      - -n
+      - idp
+    env:
+      - 'CLOUDSDK_COMPUTE_REGION=us-central1'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=idp-poc-cluster'
+
+images:
+  - 'gcr.io/project-7d27fad9-61bb-42c4-b2e/backstage:latest'
+
+timeout: '1200s'
+
+logsBucket: 'gs://project-7d27fad9-61bb-42c4-b2e_cloudbuild/logs'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: GCS_ONLY
