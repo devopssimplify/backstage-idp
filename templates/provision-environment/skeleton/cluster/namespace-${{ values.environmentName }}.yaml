@@ -4,6 +4,7 @@ metadata:
   name: ${{ values.environmentName }}
   labels:
     team: ${{ values.team }}
+    network-code: ${{ values.networkCode }}
     managed-by: backstage
   annotations:
     description: "${{ values.description }}"

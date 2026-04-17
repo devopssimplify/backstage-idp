@@ -17,6 +17,7 @@ spec:
       required:
         - environmentName
         - team
+        - networkCode
       properties:
         environmentName:
           title: Environment Name
@@ -33,6 +34,12 @@ spec:
             - backend
             - frontend
             - data
+        networkCode:
+          title: Network Code
+          type: string
+          description: Cost center / billing code for this environment (e.g. pds-501, pds-509)
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:help: 'Used for GCP billing labels and resource grouping'
         description:
           title: Description
           type: string
@@ -65,6 +72,7 @@ spec:
         values:
           environmentName: ${{ parameters.environmentName }}
           team: ${{ parameters.team }}
+          networkCode: ${{ parameters.networkCode }}
           description: ${{ parameters.description }}
           enableCloudSQL: ${{ parameters.enableCloudSQL }}
           enableGCS: ${{ parameters.enableGCS }}

@@ -48,6 +48,13 @@ spec:
             - frontend
             - data
 
+        networkCode:
+          title: Network Code
+          type: string
+          description: Cost center / billing code for this resource (e.g. pds-501, pds-509)
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:help: 'Used for GCP billing labels and resource grouping'
+
     - title: Container Configuration
       required:
         - image
@@ -135,6 +142,7 @@ spec:
           enableService: ${{ parameters.enableService }}
           servicePort: ${{ parameters.servicePort }}
           serviceType: ${{ parameters.serviceType }}
+          networkCode: ${{ parameters.networkCode }}
 
     - id: publish-pr
       name: Create GitHub Pull Request

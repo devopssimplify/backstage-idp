@@ -13,10 +13,8 @@ metadata:
     - message-broker
     - ${{ values.environment }}
     - idp-managed
+    - network-code-${{ values.networkCode }}
   links:
-    - title: Kafka UI
-      url: http://${{ values.namePrefix }}-kafka-ui.${{ values.environment }}.svc.cluster.local
-      icon: dashboard
     - title: GitOps Source
       url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/kafka-${{ values.clusterName }}.yaml
       icon: github
@@ -24,4 +22,15 @@ spec:
   type: message-broker
   lifecycle: ${{ values.environment }}
   owner: group:default/${{ values.team }}
-  system: idp-platform
+  system: ${{ values.networkCode }}
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: ${{ values.networkCode }}
+  description: "Network code ${{ values.networkCode }} — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/${{ values.team }}

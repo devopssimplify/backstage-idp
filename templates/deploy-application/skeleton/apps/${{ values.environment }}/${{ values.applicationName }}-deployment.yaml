@@ -6,6 +6,7 @@ metadata:
   labels:
     app: ${{ values.applicationName }}
     team: ${{ values.team }}
+    network-code: ${{ values.networkCode }}
     version: "${{ values.version }}"
     managed-by: backstage
   annotations:
@@ -20,6 +21,7 @@ spec:
       labels:
         app: ${{ values.applicationName }}
         team: ${{ values.team }}
+        network-code: ${{ values.networkCode }}
         version: "${{ values.version }}"
     spec:
       containers:

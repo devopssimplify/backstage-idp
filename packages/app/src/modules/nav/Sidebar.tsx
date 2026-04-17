@@ -46,6 +46,11 @@ export const SidebarContent = NavContentBlueprint.make({
           <SidebarGroup label="IDP Monitoring" icon={<StorageIcon />}>
             <SidebarItem
               icon={StorageIcon}
+              to="/?filters[kind]=system&filters[user]=all"
+              text="By Network Code"
+            />
+            <SidebarItem
+              icon={StorageIcon}
               to="/?filters[kind]=resource&filters[user]=all"
               text="IDP Resources"
             />

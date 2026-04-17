@@ -7,6 +7,7 @@ metadata:
   labels:
     app: ${{ values.clusterName }}
     team: ${{ values.team }}
+    network-code: ${{ values.networkCode }}
     managed-by: backstage
   annotations:
     description: "${{ values.description }}"
@@ -79,6 +80,7 @@ spec:
           labels:
             app: ${{ values.clusterName }}
             team: ${{ values.team }}
+            network-code: ${{ values.networkCode }}
   zookeeper:
     replicas: ${{ values.zookeeperNodes }}
     storage:
@@ -99,6 +101,7 @@ spec:
           labels:
             app: ${{ values.clusterName }}
             team: ${{ values.team }}
+            network-code: ${{ values.networkCode }}
   entityOperator:
     topicOperator:
       resources:

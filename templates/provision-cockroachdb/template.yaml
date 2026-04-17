@@ -19,6 +19,7 @@ spec:
         - databaseName
         - environment
         - team
+        - networkCode
       properties:
         databaseName:
           title: Database Name
@@ -152,6 +153,7 @@ spec:
           enableBackups: ${{ parameters.enableBackups }}
           backupSchedule: ${{ parameters.backupSchedule }}
           gcpProject: project-7d27fad9-61bb-42c4-b2e
+          networkCode: ${{ parameters.networkCode }}
 
     - id: publish-pr
       name: Create GitHub Pull Request

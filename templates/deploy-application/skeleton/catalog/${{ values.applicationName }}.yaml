@@ -3,7 +3,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: ${{ values.applicationName }}
-  description: ${{ values.applicationName }} deployed to ${{ values.environment }} by IDP
+  description: "${{ values.applicationName }} deployed to ${{ values.environment }} by IDP"
   annotations:
     backstage.io/kubernetes-id: ${{ values.applicationName }}
     backstage.io/kubernetes-namespace: ${{ values.environment }}
@@ -12,6 +12,7 @@ metadata:
     - application
     - ${{ values.environment }}
     - idp-managed
+    - network-code-${{ values.networkCode }}
   links:
     - title: GitOps Source
       url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/apps/${{ values.environment }}/${{ values.applicationName }}.yaml
@@ -20,4 +21,15 @@ spec:
   type: service
   lifecycle: ${{ values.environment }}
   owner: group:default/${{ values.team }}
-  system: idp-platform
+  system: ${{ values.networkCode }}
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: ${{ values.networkCode }}
+  description: "Network code ${{ values.networkCode }} — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/${{ values.team }}

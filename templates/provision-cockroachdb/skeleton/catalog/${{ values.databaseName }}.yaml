@@ -13,6 +13,7 @@ metadata:
     - cockroachdb
     - ${{ values.environment }}
     - idp-managed
+    - network-code-${{ values.networkCode }}
   links:
     - title: GitOps Source
       url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cockroachdb-${{ values.databaseName }}.yaml
@@ -21,4 +22,15 @@ spec:
   type: database
   lifecycle: ${{ values.environment }}
   owner: group:default/${{ values.team }}
-  system: idp-platform
+  system: ${{ values.networkCode }}
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: ${{ values.networkCode }}
+  description: "Network code ${{ values.networkCode }} — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/${{ values.team }}

@@ -18,6 +18,7 @@ spec:
         - namePrefix
         - environment
         - team
+        - networkCode
       properties:
         namePrefix:
           title: Name Prefix
@@ -167,6 +168,7 @@ spec:
           memoryRequest: ${{ parameters.memoryRequest }}
           cpuLimit: ${{ parameters.cpuLimit }}
           memoryLimit: ${{ parameters.memoryLimit }}
+          networkCode: ${{ parameters.networkCode }}
 
     - id: publish-pr
       name: Create GitHub Pull Request
