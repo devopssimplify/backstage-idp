@@ -159,6 +159,12 @@ catalog:
       rules:
         - allow: [Template]
 
+    # Update Network Code template
+    - type: file
+      target: ../../templates/update-network-code/template.yaml
+      rules:
+        - allow: [Template]
+
     # Local example organizational data
     - type: file
       target: ../../examples/org.yaml

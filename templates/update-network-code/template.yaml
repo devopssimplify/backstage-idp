@@ -1,0 +1,70 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: update-network-code
+  title: Update Network Code
+  description: Assign or change the network code (cost center / billing label) on any existing IDP-managed resource
+  tags:
+    - billing
+    - network-code
+    - tagging
+spec:
+  owner: platform-team
+  type: infrastructure
+
+  parameters:
+    - title: Resource to Tag
+      required:
+        - resourceType
+        - resourceName
+        - networkCode
+      properties:
+        resourceType:
+          title: Resource Type
+          type: string
+          description: Type of resource to update
+          enum:
+            - Namespace
+            - CockroachDB
+            - Kafka Cluster
+          enumNames:
+            - 'Namespace (environment)'
+            - 'CockroachDB Database'
+            - 'Kafka Cluster'
+          ui:autofocus: true
+        resourceName:
+          title: Resource Name
+          type: string
+          description: >
+            Name of the resource to tag.
+            Namespace → use the namespace name (e.g. pds-503).
+            CockroachDB → use the database name (e.g. pds-509-db).
+            Kafka Cluster → use the name prefix (e.g. pds) — cluster name will be pds-kafka.
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+        networkCode:
+          title: Network Code
+          type: string
+          description: Cost center / billing code to assign (e.g. CN580004, pds-501)
+          pattern: '^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$'
+          ui:help: 'This label is used for GCP billing cost allocation and Backstage grouping'
+
+  steps:
+    - id: dispatch
+      name: Update Network Code via GitOps
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        workflowId: update-network-code.yml
+        branchOrTagName: main
+        workflowInputs:
+          resourceType: ${{ parameters.resourceType }}
+          resourceName: ${{ parameters.resourceName }}
+          networkCode: ${{ parameters.networkCode }}
+
+  output:
+    text:
+      - title: Network Code Updated
+        content: |
+          The network code **${{ parameters.networkCode }}** is being applied to **${{ parameters.resourceType }}** `${{ parameters.resourceName }}`.
+
+          The GitOps workflow will update the label in the repo and Config Sync will apply it to the cluster within ~30 seconds.
