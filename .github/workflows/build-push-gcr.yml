@@ -50,14 +50,14 @@ jobs:
       run: |
         echo "Image pushed: ${{ env.IMAGE }}:${{ github.sha }}"
 
-    - name: Install GKE auth plugin
-      run: |
-        sudo apt-get install -y google-cloud-sdk-gke-gcloud-auth-plugin
+    - name: Get GKE credentials
+      uses: google-github-actions/get-gke-credentials@v2
+      with:
+        cluster_name: idp-poc-cluster
+        location: us-central1-a
+        project_id: ${{ env.PROJECT_ID }}
 
     - name: Deploy to GKE
       run: |
-        gcloud container clusters get-credentials idp-poc-cluster \
-          --zone us-central1-a \
-          --project ${{ env.PROJECT_ID }}
         kubectl rollout restart deployment/backstage -n idp
         kubectl rollout status deployment/backstage -n idp --timeout=300s
