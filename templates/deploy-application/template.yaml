@@ -171,7 +171,8 @@ spec:
           - **Memory Request/Limit**: ${{ parameters.memoryRequest }} / ${{ parameters.memoryLimit }}
 
           This PR was created by the Backstage scaffolder.
-        targetPath: .
+        sourcePath: apps
+        targetPath: apps
     - id: publish-catalog-pr
       name: Register in Backstage Catalog
       action: publish:github:pull-request

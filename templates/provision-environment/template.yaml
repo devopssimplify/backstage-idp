@@ -99,7 +99,8 @@ spec:
           - Memorystore: ${{ parameters.enableMemorystore }}
 
           This PR was created by the Backstage scaffolder.
-        targetPath: .
+        sourcePath: cluster
+        targetPath: cluster
     - id: publish-catalog-pr
       name: Register in Backstage Catalog
       action: publish:github:pull-request
