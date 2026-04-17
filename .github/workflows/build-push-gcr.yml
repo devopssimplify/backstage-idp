@@ -49,3 +49,11 @@ jobs:
     - name: Output image
       run: |
         echo "Image pushed: ${{ env.IMAGE }}:${{ github.sha }}"
+
+    - name: Deploy to GKE
+      run: |
+        gcloud container clusters get-credentials idp-poc-cluster \
+          --region us-central1 \
+          --project ${{ env.PROJECT_ID }}
+        kubectl rollout restart deployment/backstage -n idp
+        kubectl rollout status deployment/backstage -n idp --timeout=300s
