@@ -43,6 +43,12 @@ spec:
             - backend
             - frontend
             - data
+        networkCode:
+          title: Network Code
+          type: string
+          description: Cost center / billing code for this resource (e.g. CN580004, pds-501)
+          pattern: '^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$'
+          ui:help: 'Used for GCP billing labels and resource grouping'
         description:
           title: Description
           type: string

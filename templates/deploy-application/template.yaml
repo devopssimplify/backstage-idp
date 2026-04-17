@@ -51,8 +51,8 @@ spec:
         networkCode:
           title: Network Code
           type: string
-          description: Cost center / billing code for this resource (e.g. pds-501, pds-509)
-          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          description: Cost center / billing code for this resource (e.g. CN580004, pds-501)
+          pattern: '^[a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?$'
           ui:help: 'Used for GCP billing labels and resource grouping'
 
     - title: Container Configuration
