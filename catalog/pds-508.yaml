@@ -1,9 +1,20 @@
 ---
 apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: CN580004
+  description: "Network code CN580004 — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/platform
+---
+apiVersion: backstage.io/v1alpha1
 kind: Resource
 metadata:
   name: pds-508-namespace
-  description: "test"
+  description: "pds-508 namespace environment"
   tags:
     - namespace
     - environment
@@ -18,14 +29,3 @@ spec:
   lifecycle: production
   owner: group:default/platform
   system: CN580004
----
-apiVersion: backstage.io/v1alpha1
-kind: System
-metadata:
-  name: CN580004
-  description: "Network code CN580004 — all resources billed to this cost center"
-  tags:
-    - network-code
-    - idp-managed
-spec:
-  owner: group:default/platform
