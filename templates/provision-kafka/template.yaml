@@ -211,6 +211,18 @@ spec:
 
           This PR was created by the Backstage scaffolder.
         targetPath: .
+    - id: publish-catalog-pr
+      name: Register in Backstage Catalog
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=backstage-idp&owner=devopssimplify
+        branchName: catalog-kafka-${{ parameters.namePrefix }}
+        title: 'catalog: Register Kafka ${{ parameters.namePrefix }}-kafka in Backstage'
+        description: |
+          Registers this resource in the Backstage catalog under network code **${{ parameters.networkCode }}**.
+          Merge this PR to make the resource visible in the IDP portal.
+        sourcePath: catalog
+        targetPath: catalog
 
   output:
     links:

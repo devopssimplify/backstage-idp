@@ -1,0 +1,20 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: idp-platform
+  description: Internal Developer Platform - all infrastructure and applications managed by the IDP
+  tags:
+    - idp
+    - platform
+spec:
+  owner: group:default/platform
+---
+apiVersion: backstage.io/v1alpha1
+kind: Group
+metadata:
+  name: platform
+  description: Platform engineering team
+spec:
+  type: team
+  children: []
