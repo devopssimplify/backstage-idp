@@ -50,6 +50,10 @@ jobs:
       run: |
         echo "Image pushed: ${{ env.IMAGE }}:${{ github.sha }}"
 
+    - name: Install GKE auth plugin
+      run: |
+        gcloud components install gke-gcloud-auth-plugin --quiet
+
     - name: Deploy to GKE
       run: |
         gcloud container clusters get-credentials idp-poc-cluster \
