@@ -11,6 +11,8 @@ import { SidebarLogo } from './SidebarLogo';
 import MenuIcon from '@material-ui/icons/Menu';
 import SearchIcon from '@material-ui/icons/Search';
 import DeleteIcon from '@material-ui/icons/Delete';
+import StorageIcon from '@material-ui/icons/Storage';
+import HistoryIcon from '@material-ui/icons/History';
 import { SidebarSearchModal } from '@backstage/plugin-search';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
 import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
@@ -39,6 +41,19 @@ export const SidebarContent = NavContentBlueprint.make({
             <SidebarScrollWrapper>
               {nav.rest({ sortBy: 'title' })}
             </SidebarScrollWrapper>
+          </SidebarGroup>
+          <SidebarDivider />
+          <SidebarGroup label="IDP Monitoring" icon={<StorageIcon />}>
+            <SidebarItem
+              icon={StorageIcon}
+              to="/catalog?filters[kind]=resource&filters[user]=all"
+              text="IDP Resources"
+            />
+            <SidebarItem
+              icon={HistoryIcon}
+              to="/create/tasks"
+              text="Audit Trail"
+            />
           </SidebarGroup>
           <SidebarDivider />
           <SidebarGroup label="Administration" icon={<DeleteIcon />}>

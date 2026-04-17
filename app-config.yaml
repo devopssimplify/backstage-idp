@@ -90,6 +90,16 @@ catalog:
     pullRequestBranchName: backstage-integration
   rules:
     - allow: [Component, System, API, Resource, Location, Group, User]
+  providers:
+    github:
+      idp-gitops:
+        organization: devopssimplify
+        catalogPath: /catalog/*.yaml
+        filters:
+          repository: idp-poc-gitops
+        schedule:
+          frequency: { minutes: 5 }
+          timeout: { minutes: 3 }
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
     - type: file
@@ -172,7 +182,16 @@ catalog:
     #     - allow: [User, Group]
 
 kubernetes:
-  # see https://backstage.io/docs/features/kubernetes/configuration for kubernetes configuration options
+  serviceLocatorMethod:
+    type: multiTenant
+  clusterLocatorMethods:
+    - type: config
+      clusters:
+        - name: idp-gke
+          url: ${K8S_CLUSTER_URL}
+          authProvider: serviceAccount
+          serviceAccountToken: ${K8S_SERVICE_ACCOUNT_TOKEN}
+          skipTLSVerify: true
 
 # see https://backstage.io/docs/permissions/getting-started for more on the permission framework
 permission:

@@ -1,0 +1,24 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ values.databaseName }}
+  description: ${{ values.description if values.description else "CockroachDB cluster managed by IDP" }}
+  annotations:
+    backstage.io/kubernetes-id: cockroachdb-${{ values.databaseName }}
+    backstage.io/kubernetes-namespace: ${{ values.environment }}
+    backstage.io/kubernetes-label-selector: app=cockroachdb-${{ values.databaseName }}
+  tags:
+    - database
+    - cockroachdb
+    - ${{ values.environment }}
+    - idp-managed
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cockroachdb-${{ values.databaseName }}.yaml
+      icon: github
+spec:
+  type: database
+  lifecycle: ${{ values.environment }}
+  owner: group:default/${{ values.team }}
+  system: idp-platform

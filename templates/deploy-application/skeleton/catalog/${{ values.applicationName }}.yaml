@@ -1,0 +1,23 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: ${{ values.applicationName }}
+  description: ${{ values.applicationName }} deployed to ${{ values.environment }} by IDP
+  annotations:
+    backstage.io/kubernetes-id: ${{ values.applicationName }}
+    backstage.io/kubernetes-namespace: ${{ values.environment }}
+    backstage.io/kubernetes-label-selector: app=${{ values.applicationName }}
+  tags:
+    - application
+    - ${{ values.environment }}
+    - idp-managed
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/apps/${{ values.environment }}/${{ values.applicationName }}.yaml
+      icon: github
+spec:
+  type: service
+  lifecycle: ${{ values.environment }}
+  owner: group:default/${{ values.team }}
+  system: idp-platform
