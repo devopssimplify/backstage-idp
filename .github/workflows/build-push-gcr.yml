@@ -53,7 +53,7 @@ jobs:
     - name: Deploy to GKE
       run: |
         gcloud container clusters get-credentials idp-poc-cluster \
-          --region us-central1 \
+          --zone us-central1-a \
           --project ${{ env.PROJECT_ID }}
         kubectl rollout restart deployment/backstage -n idp
         kubectl rollout status deployment/backstage -n idp --timeout=300s
