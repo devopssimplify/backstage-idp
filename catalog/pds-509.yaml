@@ -1,0 +1,31 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-509-namespace
+  description: "test"
+  tags:
+    - namespace
+    - environment
+    - idp-managed
+    - network-code-CN580004
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/cluster/namespace-pds-509.yaml
+      icon: github
+spec:
+  type: environment
+  lifecycle: production
+  owner: group:default/platform
+  system: CN580004
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: CN580004
+  description: "Network code CN580004 — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/platform
