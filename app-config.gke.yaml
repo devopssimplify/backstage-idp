@@ -38,12 +38,28 @@ auth:
     guest:
       dangerouslyAllowOutsideDevelopment: true
 
+scaffolder:
+  defaultAuthor:
+    name: Backstage Scaffolder
+    email: scaffolder@backstage.io
+  defaultCommitMessage: 'Scaffolded by Backstage'
+
 catalog:
   import:
     entityFilename: catalog-info.yaml
     pullRequestBranchName: backstage-integration
   rules:
     - allow: [Component, System, API, Resource, Location, Template, User, Group]
+  providers:
+    github:
+      idp-catalog:
+        organization: devopssimplify
+        catalogPath: /catalog/*.yaml
+        filters:
+          repository: backstage-idp
+        schedule:
+          frequency: { minutes: 5 }
+          timeout: { minutes: 3 }
   locations:
     - type: file
       target: ./templates/provision-environment/template.yaml
@@ -55,10 +71,6 @@ catalog:
         - allow: [Template]
     - type: file
       target: ./templates/provision-cockroachdb/template.yaml
-      rules:
-        - allow: [Template]
-    - type: file
-      target: ./templates/provision-cockroachdb-schema/template.yaml
       rules:
         - allow: [Template]
     - type: file
@@ -81,12 +93,10 @@ catalog:
       target: ./templates/delete-kafka-topics/template.yaml
       rules:
         - allow: [Template]
-
-scaffolder:
-  defaultAuthor:
-    name: Backstage Scaffolder
-    email: scaffolder@backstage.io
-  defaultCommitMessage: 'Scaffolded by Backstage'
+    - type: file
+      target: ./templates/update-network-code/template.yaml
+      rules:
+        - allow: [Template]
 
 kubernetes:
   serviceLocatorMethod:
@@ -97,5 +107,6 @@ kubernetes:
         - url: ${K8S_CLUSTER_URL}
           name: gke-cluster
           authProvider: 'serviceAccount'
-          skipTLSVerify: false
-          skipMetricsLookup: true
+          serviceAccountToken: ${K8S_SERVICE_ACCOUNT_TOKEN}
+          skipTLSVerify: true
+          skipMetricsLookup: false
