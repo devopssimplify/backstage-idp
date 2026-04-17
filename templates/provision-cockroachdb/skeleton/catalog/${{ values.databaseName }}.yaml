@@ -13,7 +13,7 @@ metadata:
     - cockroachdb
     - ${{ values.environment }}
     - idp-managed
-    - network-code-${{ values.networkCode }}
+    - network-code-${{ values.networkCode | lower }}
   links:
     - title: GitOps Source
       url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cockroachdb-${{ values.databaseName }}.yaml

@@ -19,7 +19,7 @@ metadata:
     - namespace
     - environment
     - idp-managed
-    - network-code-CN580004
+    - network-code-cn580004
   links:
     - title: GitOps Source
       url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/cluster/namespace-pds-508.yaml
