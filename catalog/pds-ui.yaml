@@ -3,33 +3,33 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: pds-ui
-  description: "pds-ui deployed to pds-510 by IDP"
+  description: "pds-ui deployed to pds-515 by IDP"
   annotations:
     backstage.io/kubernetes-id: pds-ui
-    backstage.io/kubernetes-namespace: pds-510
+    backstage.io/kubernetes-namespace: pds-515
     backstage.io/kubernetes-label-selector: app=pds-ui
   tags:
     - application
-    - pds-510
+    - pds-515
     - idp-managed
-    - network-code-cn580005
+    - network-code-cn580004
   links:
     - title: GitOps Source
-      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/apps/pds-510/pds-ui.yaml
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/apps/pds-515/pds-ui.yaml
       icon: github
 spec:
   type: service
-  lifecycle: pds-510
-  owner: group:default/backend
-  system: CN580005
+  lifecycle: pds-515
+  owner: group:default/platform
+  system: CN580004
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
-  name: CN580005
-  description: "Network code CN580005 — all resources billed to this cost center"
+  name: CN580004
+  description: "Network code CN580004 — all resources billed to this cost center"
   tags:
     - network-code
     - idp-managed
 spec:
-  owner: group:default/backend
+  owner: group:default/platform
