@@ -61,6 +61,17 @@ spec:
           environment: ${{ parameters.environment }}
           reason: ${{ parameters.reason if parameters.reason else 'No reason provided' }}
 
+    - id: delete-catalog-entry
+      name: Remove from Backstage Catalog
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=backstage-idp&owner=devopssimplify
+        workflowId: delete-catalog-entry.yml
+        branchOrTagName: main
+        workflowInputs:
+          catalog_file: ${{ parameters.namePrefix }}-kafka.yaml
+          reason: ${{ parameters.reason if parameters.reason else 'Kafka cluster deleted via IDP' }}
+
   output:
     text:
       - title: Resources Being Deleted

@@ -1,0 +1,36 @@
+name: Delete Catalog Entry
+
+on:
+  workflow_dispatch:
+    inputs:
+      catalog_file:
+        description: 'Catalog file to delete from catalog/ dir (e.g., pds-508.yaml)'
+        required: true
+      reason:
+        description: 'Reason for deletion'
+        required: false
+        default: 'Resource deleted via IDP'
+
+jobs:
+  delete-catalog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Delete catalog file
+      run: |
+        FILE="catalog/${{ github.event.inputs.catalog_file }}"
+        if [ -f "$FILE" ]; then
+          git config user.email "scaffolder@backstage.io"
+          git config user.name "Backstage Scaffolder"
+          git rm "$FILE"
+          git commit -m "catalog: remove ${{ github.event.inputs.catalog_file }} — ${{ github.event.inputs.reason }}"
+          git push
+          echo "Deleted $FILE from catalog"
+        else
+          echo "File $FILE not found in catalog — already removed or never registered"
+        fi

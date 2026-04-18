@@ -51,6 +51,13 @@ spec:
           title: Deletion Reason
           type: string
           description: Why is this resource being deleted?
+        catalogFile:
+          title: Catalog File to Remove
+          type: string
+          description: >
+            Filename in the Backstage catalog to remove (e.g. my-db.yaml for CockroachDB,
+            my-kafka.yaml for Kafka, pds-ui-pds-510.yaml for an application).
+            Leave blank to skip catalog cleanup.
 
   steps:
     - id: trigger-workflow
@@ -65,6 +72,18 @@ spec:
           resourceName: ${{ parameters.resourceName }}
           environment: ${{ parameters.environment }}
           reason: ${{ parameters.reason }}
+
+    - id: delete-catalog-entry
+      name: Remove from Backstage Catalog
+      if: ${{ parameters.catalogFile }}
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=backstage-idp&owner=devopssimplify
+        workflowId: delete-catalog-entry.yml
+        branchOrTagName: main
+        workflowInputs:
+          catalog_file: ${{ parameters.catalogFile }}
+          reason: ${{ parameters.reason if parameters.reason else 'Resource deleted via IDP' }}
 
   output:
     links:
