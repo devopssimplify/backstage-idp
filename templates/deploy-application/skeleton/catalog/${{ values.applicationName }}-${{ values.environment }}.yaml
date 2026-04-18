@@ -2,7 +2,7 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: ${{ values.applicationName }}
+  name: ${{ values.applicationName }}-${{ values.environment }}
   description: "${{ values.applicationName }} deployed to ${{ values.environment }} by IDP"
   annotations:
     backstage.io/kubernetes-id: ${{ values.applicationName }}
