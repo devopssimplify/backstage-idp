@@ -3,23 +3,23 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: pds-ui
-  description: "pds-ui deployed to pds-515 by IDP"
+  description: "pds-ui deployed to pds-509 by IDP"
   annotations:
     backstage.io/kubernetes-id: pds-ui
-    backstage.io/kubernetes-namespace: pds-515
+    backstage.io/kubernetes-namespace: pds-509
     backstage.io/kubernetes-label-selector: app=pds-ui
   tags:
     - application
-    - pds-515
+    - pds-509
     - idp-managed
     - network-code-cn580004
   links:
     - title: GitOps Source
-      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/apps/pds-515/pds-ui.yaml
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/apps/pds-509/pds-ui.yaml
       icon: github
 spec:
   type: service
-  lifecycle: pds-515
+  lifecycle: pds-509
   owner: group:default/platform
   system: CN580004
 ---
