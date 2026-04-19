@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   createFrontendModule,
   PageBlueprint,
@@ -6,9 +7,9 @@ import {
 const costInsightsPage = PageBlueprint.make({
   params: {
     path: '/cost-insights',
-    component: async () => {
+    loader: async () => {
       const { CostInsightsPage } = await import('./CostPage');
-      return CostInsightsPage;
+      return <CostInsightsPage />;
     },
   },
 });
