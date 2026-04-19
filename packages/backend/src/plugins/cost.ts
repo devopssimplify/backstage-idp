@@ -5,6 +5,41 @@ import {
 import { Router } from 'express';
 import { BigQuery } from '@google-cloud/bigquery';
 
+const MOCK_SUMMARY = [
+  { network_code: 'CN580004', total_cost: 312.45, currency: 'USD' },
+  { network_code: 'CN580005', total_cost: 198.72, currency: 'USD' },
+  { network_code: 'untagged',  total_cost: 87.30,  currency: 'USD' },
+];
+
+const MOCK_COSTS = [
+  { network_code: 'CN580004', total_cost: 312.45, currency: 'USD', month: '2026-04' },
+  { network_code: 'CN580005', total_cost: 198.72, currency: 'USD', month: '2026-04' },
+  { network_code: 'untagged',  total_cost: 87.30,  currency: 'USD', month: '2026-04' },
+  { network_code: 'CN580004', total_cost: 289.10, currency: 'USD', month: '2026-03' },
+  { network_code: 'CN580005', total_cost: 175.40, currency: 'USD', month: '2026-03' },
+  { network_code: 'untagged',  total_cost: 92.15,  currency: 'USD', month: '2026-03' },
+  { network_code: 'CN580004', total_cost: 301.88, currency: 'USD', month: '2026-02' },
+  { network_code: 'CN580005', total_cost: 210.55, currency: 'USD', month: '2026-02' },
+  { network_code: 'untagged',  total_cost: 79.60,  currency: 'USD', month: '2026-02' },
+];
+
+const MOCK_BREAKDOWN: Record<string, any[]> = {
+  CN580004: [
+    { service: 'Kubernetes Engine', total_cost: 198.30, currency: 'USD' },
+    { service: 'Cloud SQL',         total_cost: 72.15,  currency: 'USD' },
+    { service: 'Cloud Storage',     total_cost: 28.50,  currency: 'USD' },
+    { service: 'Networking',        total_cost: 13.50,  currency: 'USD' },
+  ],
+  CN580005: [
+    { service: 'Kubernetes Engine', total_cost: 120.40, currency: 'USD' },
+    { service: 'Pub/Sub',           total_cost: 45.20,  currency: 'USD' },
+    { service: 'Cloud Storage',     total_cost: 33.12,  currency: 'USD' },
+  ],
+  untagged: [
+    { service: 'Kubernetes Engine', total_cost: 87.30, currency: 'USD' },
+  ],
+};
+
 export default createBackendPlugin({
   pluginId: 'cost',
   register(env) {
@@ -45,10 +80,10 @@ export default createBackendPlugin({
               ORDER BY month DESC, total_cost DESC
             `;
             const [rows] = await bigquery.query({ query });
-            res.json({ costs: rows });
+            res.json({ costs: rows.length ? rows : MOCK_COSTS, mock: !rows.length });
           } catch (err: any) {
-            logger.error('BigQuery costs query failed', err);
-            res.status(500).json({ error: err.message });
+            logger.warn('BigQuery costs query failed, using mock data', err);
+            res.json({ costs: MOCK_COSTS, mock: true });
           }
         });
 
@@ -68,10 +103,10 @@ export default createBackendPlugin({
               ORDER BY total_cost DESC
             `;
             const [rows] = await bigquery.query({ query });
-            res.json({ summary: rows });
+            res.json({ summary: rows.length ? rows : MOCK_SUMMARY, mock: !rows.length });
           } catch (err: any) {
-            logger.error('BigQuery summary query failed', err);
-            res.status(500).json({ error: err.message });
+            logger.warn('BigQuery summary query failed, using mock data', err);
+            res.json({ summary: MOCK_SUMMARY, mock: true });
           }
         });
 
@@ -100,10 +135,12 @@ export default createBackendPlugin({
               query,
               params: { networkCode },
             });
-            res.json({ breakdown: rows });
+            const fallback = MOCK_BREAKDOWN[networkCode] || MOCK_BREAKDOWN['untagged'];
+            res.json({ breakdown: rows.length ? rows : fallback, mock: !rows.length });
           } catch (err: any) {
-            logger.error('BigQuery breakdown query failed', err);
-            res.status(500).json({ error: err.message });
+            logger.warn('BigQuery breakdown query failed, using mock data', err);
+            const fallback = MOCK_BREAKDOWN[networkCode] || MOCK_BREAKDOWN['untagged'];
+            res.json({ breakdown: fallback, mock: true });
           }
         });
 

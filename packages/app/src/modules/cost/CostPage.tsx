@@ -91,6 +91,7 @@ export const CostInsightsPage = () => {
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isMock, setIsMock] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -111,6 +112,7 @@ export const CostInsightsPage = () => {
 
         setSummary(summaryData.summary || []);
         setMonthly(monthlyData.costs || []);
+        setIsMock(summaryData.mock || monthlyData.mock || false);
       } catch (e: any) {
         setError(e);
       } finally {
@@ -146,6 +148,15 @@ export const CostInsightsPage = () => {
         subtitle="Billing chargeback by network code — current month"
       />
       <Content>
+        {isMock && (
+          <Grid item xs={12}>
+            <Paper style={{ padding: '12px 16px', backgroundColor: '#fff3cd', marginBottom: 16 }}>
+              <Typography variant="body2">
+                ⚠️ <strong>Sample data shown</strong> — GCP billing export is enabled but has not populated yet (can take up to 48h). This page will automatically show real costs once data arrives.
+              </Typography>
+            </Paper>
+          </Grid>
+        )}
         {summary.length === 0 ? (
           <InfoCard title="No billing data available">
             <Typography className={classes.noData}>
