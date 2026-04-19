@@ -112,8 +112,8 @@ export default createBackendPlugin({
 
         // Service-level breakdown for a specific network-code
         router.get('/costs/breakdown', async (req, res) => {
+          const networkCode = req.query.networkCode as string;
           try {
-            const networkCode = req.query.networkCode as string;
             if (!networkCode) {
               res.status(400).json({ error: 'networkCode query param required' });
               return;
