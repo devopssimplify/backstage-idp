@@ -98,6 +98,11 @@ catalog:
       rules:
         - allow: [Template]
 
+gcpBilling:
+  projectId: project-7d27fad9-61bb-42c4-b2e
+  dataset: billing_export
+  table: gcp_billing_export_v1_REPLACE_WITH_BILLING_ACCOUNT_ID
+
 kubernetes:
   serviceLocatorMethod:
     type: 'multiTenant'

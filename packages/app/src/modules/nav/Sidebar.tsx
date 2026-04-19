@@ -13,6 +13,7 @@ import SearchIcon from '@material-ui/icons/Search';
 import DeleteIcon from '@material-ui/icons/Delete';
 import StorageIcon from '@material-ui/icons/Storage';
 import HistoryIcon from '@material-ui/icons/History';
+import MoneyIcon from '@material-ui/icons/AttachMoney';
 import { SidebarSearchModal } from '@backstage/plugin-search';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
 import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
@@ -58,6 +59,11 @@ export const SidebarContent = NavContentBlueprint.make({
               icon={HistoryIcon}
               to="/create/tasks"
               text="Audit Trail"
+            />
+            <SidebarItem
+              icon={MoneyIcon}
+              to="/cost-insights"
+              text="Cost Insights"
             />
           </SidebarGroup>
           <SidebarDivider />
