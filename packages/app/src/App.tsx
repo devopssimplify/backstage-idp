@@ -2,8 +2,8 @@ import { createApp } from '@backstage/frontend-defaults';
 import catalogPlugin from '@backstage/plugin-catalog/alpha';
 import kubernetesPlugin from '@backstage/plugin-kubernetes/alpha';
 import { navModule } from './modules/nav';
-import { costModule } from './modules/cost';
+import { costPlugin } from './modules/cost';
 
 export default createApp({
-  features: [catalogPlugin, kubernetesPlugin, navModule, costModule],
+  features: [catalogPlugin, kubernetesPlugin, navModule, costPlugin],
 });

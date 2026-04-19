@@ -1,5 +1,5 @@
 import {
-  createFrontendModule,
+  createFrontendPlugin,
   PageBlueprint,
 } from '@backstage/frontend-plugin-api';
 
@@ -13,7 +13,7 @@ const costInsightsPage = PageBlueprint.make({
   },
 });
 
-export const costModule = createFrontendModule({
+export const costPlugin = createFrontendPlugin({
   pluginId: 'cost-insights',
   extensions: [costInsightsPage],
 });
