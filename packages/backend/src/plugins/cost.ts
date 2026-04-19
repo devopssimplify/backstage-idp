@@ -53,7 +53,7 @@ export default createBackendPlugin({
         });
 
         // Current-month summary per network-code (for dashboard cards)
-        router.get('/costs/summary', async (req, res) => {
+        router.get('/costs/summary', async (_req, res) => {
           try {
             const query = `
               SELECT

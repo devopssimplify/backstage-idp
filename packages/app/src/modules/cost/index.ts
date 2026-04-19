@@ -5,7 +5,7 @@ import {
 
 const costInsightsPage = PageBlueprint.make({
   params: {
-    defaultPath: '/cost-insights',
+    path: '/cost-insights',
     component: async () => {
       const { CostInsightsPage } = await import('./CostPage');
       return CostInsightsPage;
