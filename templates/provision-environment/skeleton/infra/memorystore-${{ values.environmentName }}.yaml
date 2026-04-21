@@ -11,6 +11,10 @@ spec:
   region: us-central1
   tier: BASIC
   redisVersion: REDIS_7_0
+  labels:
+    network-code: ${{ values.networkCode }}
+    team: ${{ values.team }}
+    managed-by: backstage
   displayName: Redis for ${{ values.environmentName }}
   authorizedNetworkRef:
     name: default

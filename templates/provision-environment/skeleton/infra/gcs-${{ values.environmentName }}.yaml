@@ -9,6 +9,10 @@ metadata:
 spec:
   location: US-CENTRAL1
   storageClass: STANDARD
+  labels:
+    network-code: ${{ values.networkCode }}
+    team: ${{ values.team }}
+    managed-by: backstage
   uniformBucketLevelAccess: true
   versioning:
     enabled: false

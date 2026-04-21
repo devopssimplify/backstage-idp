@@ -11,6 +11,10 @@ spec:
   region: us-central1
   settings:
     tier: db-f1-micro
+    userLabels:
+      network-code: ${{ values.networkCode }}
+      team: ${{ values.team }}
+      managed-by: backstage
     diskSize: 10
     diskType: PD_SSD
     backupConfiguration:
