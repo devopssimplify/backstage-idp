@@ -18,6 +18,81 @@ spec:
   lifecycle: production
   owner: group:default/${{ values.team }}
   system: ${{ values.networkCode }}
+{%- if values.enableCloudSQL %}
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ values.environmentName }}-db
+  description: "Cloud SQL PostgreSQL instance for ${{ values.environmentName }}"
+  tags:
+    - cloudsql
+    - database
+    - idp-managed
+    - network-code-${{ values.networkCode | lower }}
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cloudsql-${{ values.environmentName }}.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/sql/instances/${{ values.environmentName }}-db/overview?project=${{ values.gcpProject }}
+      icon: dashboard
+spec:
+  type: database
+  lifecycle: production
+  owner: group:default/${{ values.team }}
+  system: ${{ values.networkCode }}
+{%- endif %}
+{%- if values.enableGCS %}
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ values.environmentName }}-gcs
+  description: "Cloud Storage bucket for ${{ values.environmentName }}"
+  tags:
+    - gcs
+    - storage
+    - idp-managed
+    - network-code-${{ values.networkCode | lower }}
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/gcs-${{ values.environmentName }}.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/storage/browser/${{ values.gcpProject }}-${{ values.environmentName }}-data?project=${{ values.gcpProject }}
+      icon: dashboard
+spec:
+  type: storage
+  lifecycle: production
+  owner: group:default/${{ values.team }}
+  system: ${{ values.networkCode }}
+{%- endif %}
+{%- if values.enableMemorystore %}
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: ${{ values.environmentName }}-redis
+  description: "Memorystore Redis instance for ${{ values.environmentName }}"
+  tags:
+    - redis
+    - memorystore
+    - idp-managed
+    - network-code-${{ values.networkCode | lower }}
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/memorystore-${{ values.environmentName }}.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/memorystore/redis/locations/us-central1/instances/${{ values.environmentName }}-redis/details/overview?project=${{ values.gcpProject }}
+      icon: dashboard
+spec:
+  type: cache
+  lifecycle: production
+  owner: group:default/${{ values.team }}
+  system: ${{ values.networkCode }}
+{%- endif %}
 ---
 apiVersion: backstage.io/v1alpha1
 kind: System
