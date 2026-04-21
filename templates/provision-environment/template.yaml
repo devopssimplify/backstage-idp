@@ -101,6 +101,28 @@ spec:
           This PR was created by the Backstage scaffolder.
         sourcePath: cluster
         targetPath: cluster
+    - id: publish-infra-pr
+      name: Create Infrastructure Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        branchName: provision-infra-${{ parameters.environmentName }}
+        title: 'feat: Provision ${{ parameters.environmentName }} infrastructure resources'
+        description: |
+          ## Infrastructure Resources for ${{ parameters.environmentName }}
+
+          **Environment**: ${{ parameters.environmentName }}
+          **Team**: ${{ parameters.team }}
+          **Network Code**: ${{ parameters.networkCode }}
+
+          ### Resources
+          - Cloud SQL: ${{ parameters.enableCloudSQL }}
+          - Cloud Storage: ${{ parameters.enableGCS }}
+          - Memorystore: ${{ parameters.enableMemorystore }}
+
+          This PR was created by the Backstage scaffolder.
+        sourcePath: infra
+        targetPath: infra
     - id: publish-catalog-pr
       name: Register in Backstage Catalog
       action: publish:github:pull-request
@@ -116,5 +138,7 @@ spec:
 
   output:
     links:
-      - title: View Pull Request
+      - title: View Namespace Pull Request
         url: ${{ steps['publish-pr'].output.remoteUrl }}
+      - title: View Infrastructure Pull Request
+        url: ${{ steps['publish-infra-pr'].output.remoteUrl }}
