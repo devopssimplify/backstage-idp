@@ -5,7 +5,7 @@ metadata:
   name: ${{ values.environmentName }}-redis
   namespace: config-connector
   labels:
-    network-code: ${{ values.networkCode }}
+    network-code: ${{ values.networkCode | lower }}
     team: ${{ values.team }}
     managed-by: backstage
   annotations:
