@@ -20,6 +20,75 @@ spec:
   system: cn580005
 ---
 apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-515-db
+  description: "Cloud SQL PostgreSQL instance for pds-515"
+  tags:
+    - cloudsql
+    - database
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cloudsql-pds-515.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/sql/instances/pds-515-db/overview?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: database
+  lifecycle: production
+  owner: group:default/backend
+  system: cn580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-515-gcs
+  description: "Cloud Storage bucket for pds-515"
+  tags:
+    - gcs
+    - storage
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/gcs-pds-515.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/storage/browser/project-7d27fad9-61bb-42c4-b2e-pds-515-data?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: storage
+  lifecycle: production
+  owner: group:default/backend
+  system: cn580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-515-redis
+  description: "Memorystore Redis instance for pds-515"
+  tags:
+    - redis
+    - memorystore
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/memorystore-pds-515.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/memorystore/redis/locations/us-central1/instances/pds-515-redis/details/overview?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: cache
+  lifecycle: production
+  owner: group:default/backend
+  system: cn580005
+---
+apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: cn580005
