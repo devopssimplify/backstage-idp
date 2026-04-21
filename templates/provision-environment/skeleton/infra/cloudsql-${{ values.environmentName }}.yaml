@@ -4,6 +4,10 @@ kind: SQLInstance
 metadata:
   name: ${{ values.environmentName }}-db
   namespace: config-connector
+  labels:
+    network-code: ${{ values.networkCode }}
+    team: ${{ values.team }}
+    managed-by: backstage
   annotations:
     cnrm.cloud.google.com/project-id: ${{ values.gcpProject }}
 spec:
@@ -11,10 +15,6 @@ spec:
   region: us-central1
   settings:
     tier: db-f1-micro
-    userLabels:
-      network-code: ${{ values.networkCode }}
-      team: ${{ values.team }}
-      managed-by: backstage
     diskSize: 10
     diskType: PD_SSD
     backupConfiguration:
