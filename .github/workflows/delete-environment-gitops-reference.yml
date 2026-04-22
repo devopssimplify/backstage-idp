@@ -1,0 +1,102 @@
+# -----------------------------------------------------------------------
+# REFERENCE FILE — copy this to the idp-poc-gitops repo as:
+#   .github/workflows/delete-environment.yml
+# -----------------------------------------------------------------------
+# Called by the Backstage "Delete Environment" scaffolder template.
+# Deletes the namespace manifest and any selected infra manifests,
+# commits the removal, and pushes — GitOps reconciliation will then
+# tear down the actual GCP / Kubernetes resources.
+# -----------------------------------------------------------------------
+
+name: Delete Environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment name (e.g. pds-515)'
+        required: true
+      delete_cloudsql:
+        description: 'Delete Cloud SQL manifest (true/false)'
+        required: false
+        default: 'false'
+      delete_gcs:
+        description: 'Delete GCS manifest (true/false)'
+        required: false
+        default: 'false'
+      delete_memorystore:
+        description: 'Delete Memorystore (Redis) manifest (true/false)'
+        required: false
+        default: 'false'
+      reason:
+        description: 'Reason for deletion'
+        required: false
+        default: 'Environment deleted via IDP'
+
+jobs:
+  delete-environment:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure git
+        run: |
+          git config user.email "scaffolder@backstage.io"
+          git config user.name "Backstage Scaffolder"
+
+      - name: Delete namespace manifest
+        run: |
+          FILE="cluster/namespace-${{ github.event.inputs.environment }}.yaml"
+          if [ -f "$FILE" ]; then
+            git rm "$FILE"
+            echo "Removed $FILE"
+          else
+            echo "Skipped (not found): $FILE"
+          fi
+
+      - name: Delete Cloud SQL manifest
+        if: ${{ github.event.inputs.delete_cloudsql == 'true' }}
+        run: |
+          FILE="infra/cloudsql-${{ github.event.inputs.environment }}.yaml"
+          if [ -f "$FILE" ]; then
+            git rm "$FILE"
+            echo "Removed $FILE"
+          else
+            echo "Skipped (not found): $FILE"
+          fi
+
+      - name: Delete GCS manifest
+        if: ${{ github.event.inputs.delete_gcs == 'true' }}
+        run: |
+          FILE="infra/gcs-${{ github.event.inputs.environment }}.yaml"
+          if [ -f "$FILE" ]; then
+            git rm "$FILE"
+            echo "Removed $FILE"
+          else
+            echo "Skipped (not found): $FILE"
+          fi
+
+      - name: Delete Memorystore manifest
+        if: ${{ github.event.inputs.delete_memorystore == 'true' }}
+        run: |
+          FILE="infra/memorystore-${{ github.event.inputs.environment }}.yaml"
+          if [ -f "$FILE" ]; then
+            git rm "$FILE"
+            echo "Removed $FILE"
+          else
+            echo "Skipped (not found): $FILE"
+          fi
+
+      - name: Commit and push
+        run: |
+          if git diff --cached --quiet; then
+            echo "Nothing staged — environment files may already be absent"
+          else
+            git commit -m "chore: delete environment ${{ github.event.inputs.environment }} — ${{ github.event.inputs.reason }}"
+            git push
+            echo "Pushed deletion commit for environment ${{ github.event.inputs.environment }}"
+          fi

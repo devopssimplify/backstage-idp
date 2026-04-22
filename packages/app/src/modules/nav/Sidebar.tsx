@@ -70,6 +70,11 @@ export const SidebarContent = NavContentBlueprint.make({
           <SidebarGroup label="Administration" icon={<DeleteIcon />}>
             <SidebarItem
               icon={DeleteIcon}
+              to="/create/templates/default/delete-environment"
+              text="Delete Environment"
+            />
+            <SidebarItem
+              icon={DeleteIcon}
               to="/create/templates/default/delete-infrastructure"
               text="Delete Infrastructure"
             />

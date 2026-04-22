@@ -60,6 +60,7 @@ catalog:
         schedule:
           frequency: { minutes: 5 }
           timeout: { minutes: 3 }
+        orphanStrategy: delete
   locations:
     - type: file
       target: ./templates/provision-environment/template.yaml
@@ -79,6 +80,10 @@ catalog:
         - allow: [Template]
     - type: file
       target: ./templates/provision-kafka-topics/template.yaml
+      rules:
+        - allow: [Template]
+    - type: file
+      target: ./templates/delete-environment/template.yaml
       rules:
         - allow: [Template]
     - type: file

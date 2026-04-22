@@ -100,6 +100,7 @@ catalog:
         schedule:
           frequency: { minutes: 5 }
           timeout: { minutes: 3 }
+        orphanStrategy: delete
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
     - type: file
@@ -138,6 +139,12 @@ catalog:
     # Provision Kafka Topics template
     - type: file
       target: ../../templates/provision-kafka-topics/template.yaml
+      rules:
+        - allow: [Template]
+
+    # Delete Environment template (full teardown: namespace + infra + catalog)
+    - type: file
+      target: ../../templates/delete-environment/template.yaml
       rules:
         - allow: [Template]
 

@@ -1,0 +1,96 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: delete-environment
+  title: "[Admin] Delete Environment"
+  description: >
+    ⚠️ Permanently delete an environment and ALL its resources —
+    namespace, Cloud SQL, GCS, and/or Memorystore (Redis).
+  tags:
+    - admin
+    - delete
+    - environment
+spec:
+  owner: platform-team
+  type: admin
+
+  parameters:
+    - title: Environment
+      required:
+        - environmentName
+      properties:
+        environmentName:
+          title: Environment Name
+          type: string
+          description: >
+            Name of the environment to delete (e.g., pds-515, pds-501).
+            Must match the name used when it was provisioned.
+          pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?$'
+          ui:autofocus: true
+
+    - title: Resources to Delete
+      description: Select every resource that was provisioned for this environment
+      properties:
+        deleteCloudSQL:
+          title: Delete Cloud SQL (infra/cloudsql-{env}.yaml)
+          type: boolean
+          default: false
+        deleteGCS:
+          title: Delete Cloud Storage / GCS (infra/gcs-{env}.yaml)
+          type: boolean
+          default: false
+        deleteMemorystore:
+          title: Delete Memorystore / Redis (infra/memorystore-{env}.yaml)
+          type: boolean
+          default: false
+
+    - title: Confirmation
+      required:
+        - reason
+        - confirmDeletion
+      properties:
+        reason:
+          title: Deletion Reason
+          type: string
+          description: Why is this environment being deleted?
+          ui:autofocus: true
+        confirmDeletion:
+          title: >
+            I understand this permanently deletes the environment namespace
+            and all selected resources. This cannot be undone.
+          type: boolean
+          default: false
+          ui:widget: checkbox
+
+  steps:
+    - id: trigger-delete-environment
+      name: Delete Environment Infrastructure
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
+        workflowId: delete-environment.yml
+        branchOrTagName: main
+        workflowInputs:
+          environment: ${{ parameters.environmentName }}
+          delete_cloudsql: "${{ parameters.deleteCloudSQL }}"
+          delete_gcs: "${{ parameters.deleteGCS }}"
+          delete_memorystore: "${{ parameters.deleteMemorystore }}"
+          reason: ${{ parameters.reason }}
+
+    - id: delete-catalog-entry
+      name: Remove from Backstage Catalog
+      action: github:actions:dispatch
+      input:
+        repoUrl: github.com?repo=backstage-idp&owner=devopssimplify
+        workflowId: delete-catalog-entry.yml
+        branchOrTagName: main
+        workflowInputs:
+          catalog_file: "${{ parameters.environmentName }}.yaml"
+          reason: ${{ parameters.reason }}
+
+  output:
+    links:
+      - title: View Delete Workflow
+        url: https://github.com/devopssimplify/idp-poc-gitops/actions/workflows/delete-environment.yml
+      - title: View Catalog Cleanup
+        url: https://github.com/devopssimplify/backstage-idp/actions/workflows/delete-catalog-entry.yml
