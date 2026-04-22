@@ -100,7 +100,7 @@ catalog:
         schedule:
           frequency: { minutes: 5 }
           timeout: { minutes: 3 }
-        orphanStrategy: delete
+  orphanStrategy: delete
   locations:
     # Local example data, file locations are relative to the backend process, typically `packages/backend`
     - type: file

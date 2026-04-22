@@ -34,3 +34,50 @@ jobs:
         else
           echo "File $FILE not found in catalog — already removed or never registered"
         fi
+
+    - name: Remove entities from Backstage catalog API
+      run: |
+        BACKSTAGE_URL="${{ secrets.BACKSTAGE_URL }}"
+        if [ -z "$BACKSTAGE_URL" ]; then
+          echo "BACKSTAGE_URL secret not set — entities will be removed on next catalog scan (within 5 min)"
+          exit 0
+        fi
+
+        ENV_NAME="${{ github.event.inputs.catalog_file }}"
+        ENV_NAME="${ENV_NAME%.yaml}"
+
+        # Obtain a guest token
+        TOKEN=$(curl -s -X POST "${BACKSTAGE_URL}/api/auth/guest/refresh" \
+          -H "Content-Type: application/json" \
+          -d '{}' | jq -r '.backendInfo.token // empty')
+
+        if [ -z "$TOKEN" ]; then
+          echo "Could not obtain auth token — entities will be removed on next catalog scan"
+          exit 0
+        fi
+
+        delete_entity() {
+          local KIND=$1
+          local NAME=$2
+          local ENTITY_JSON
+
+          ENTITY_JSON=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
+            "${BACKSTAGE_URL}/api/catalog/entities/by-name/${KIND}/default/${NAME}")
+
+          UID=$(echo "$ENTITY_JSON" | jq -r '.metadata.uid // empty')
+
+          if [ -n "$UID" ]; then
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+              -H "Authorization: Bearer ${TOKEN}" \
+              "${BACKSTAGE_URL}/api/catalog/entities/by-uid/${UID}")
+            echo "Deleted ${KIND}:default/${NAME} (uid=${UID}, status=${HTTP})"
+          else
+            echo "Not found — skipping ${KIND}:default/${NAME}"
+          fi
+        }
+
+        delete_entity resource "${ENV_NAME}-namespace"
+        delete_entity resource "${ENV_NAME}-db"
+        delete_entity resource "${ENV_NAME}-gcs"
+        delete_entity resource "${ENV_NAME}-redis"
+        echo "Catalog API cleanup complete for: ${ENV_NAME}"
