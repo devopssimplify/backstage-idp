@@ -21,18 +21,42 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Delete catalog file
+    - name: Delete catalog files
       run: |
-        FILE="catalog/${{ github.event.inputs.catalog_file }}"
+        git config user.email "scaffolder@backstage.io"
+        git config user.name "Backstage Scaffolder"
+
+        ENV_NAME="${{ github.event.inputs.catalog_file }}"
+        ENV_NAME="${ENV_NAME%.yaml}"
+
+        CHANGED=false
+
+        # Delete the main environment catalog file
+        FILE="catalog/${ENV_NAME}.yaml"
         if [ -f "$FILE" ]; then
-          git config user.email "scaffolder@backstage.io"
-          git config user.name "Backstage Scaffolder"
           git rm "$FILE"
-          git commit -m "catalog: remove ${{ github.event.inputs.catalog_file }} — ${{ github.event.inputs.reason }}"
-          git push
-          echo "Deleted $FILE from catalog"
+          echo "Removed $FILE"
+          CHANGED=true
         else
-          echo "File $FILE not found in catalog — already removed or never registered"
+          echo "Not found (skipping): $FILE"
+        fi
+
+        # Delete all application catalog files deployed to this environment
+        # Pattern: catalog/*-{env}.yaml  (e.g. pds-ui-pds-515.yaml)
+        for APP_FILE in catalog/*-${ENV_NAME}.yaml; do
+          if [ -f "$APP_FILE" ]; then
+            git rm "$APP_FILE"
+            echo "Removed $APP_FILE"
+            CHANGED=true
+          fi
+        done
+
+        if [ "$CHANGED" = "true" ]; then
+          git commit -m "catalog: remove ${{ github.event.inputs.catalog_file }} and app entries — ${{ github.event.inputs.reason }}"
+          git push
+          echo "Pushed catalog cleanup for environment: ${ENV_NAME}"
+        else
+          echo "No catalog files found for environment: ${ENV_NAME}"
         fi
 
     - name: Remove entities from Backstage catalog API
@@ -76,8 +100,19 @@ jobs:
           fi
         }
 
+        # Delete infrastructure resource entities
         delete_entity resource "${ENV_NAME}-namespace"
         delete_entity resource "${ENV_NAME}-db"
         delete_entity resource "${ENV_NAME}-gcs"
         delete_entity resource "${ENV_NAME}-redis"
+
+        # Delete application component entities — query by lifecycle=env
+        APP_ENTITIES=$(curl -s -H "Authorization: Bearer ${TOKEN}" \
+          "${BACKSTAGE_URL}/api/catalog/entities?filter=kind=Component&filter=spec.lifecycle=${ENV_NAME}" \
+          | jq -r '.[].metadata.name // empty')
+
+        for APP_NAME in $APP_ENTITIES; do
+          delete_entity component "${APP_NAME}"
+        done
+
         echo "Catalog API cleanup complete for: ${ENV_NAME}"
