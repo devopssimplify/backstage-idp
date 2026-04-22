@@ -72,9 +72,9 @@ spec:
         branchOrTagName: main
         workflowInputs:
           environment: ${{ parameters.environmentName }}
-          delete_cloudsql: "${{ parameters.deleteCloudSQL }}"
-          delete_gcs: "${{ parameters.deleteGCS }}"
-          delete_memorystore: "${{ parameters.deleteMemorystore }}"
+          delete_cloudsql: "${{ 'true' if parameters.deleteCloudSQL else 'false' }}"
+          delete_gcs: "${{ 'true' if parameters.deleteGCS else 'false' }}"
+          delete_memorystore: "${{ 'true' if parameters.deleteMemorystore else 'false' }}"
           reason: ${{ parameters.reason }}
 
     - id: delete-catalog-entry
