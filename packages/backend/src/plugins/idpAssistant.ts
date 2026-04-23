@@ -143,9 +143,13 @@ export default createBackendPlugin({
           res.setHeader('Content-Type', 'text/event-stream');
           res.setHeader('Cache-Control', 'no-cache');
           res.setHeader('Connection', 'keep-alive');
+          res.setHeader('X-Accel-Buffering', 'no');
           res.flushHeaders();
+          (res as any).socket?.setNoDelay(true);
 
-          const emit = (obj: object) => res.write(`data: ${JSON.stringify(obj)}\n\n`);
+          const emit = (obj: object) => {
+            try { res.write(`data: ${JSON.stringify(obj)}\n\n`); } catch { /* closed */ }
+          };
 
           try {
             const catalogUrl = await discovery.getBaseUrl('catalog');
@@ -216,8 +220,9 @@ Be concise. Use bullet points for lists. Include relevant names and links when a
 
             emit({ type: 'done' });
           } catch (err: any) {
-            logger.error('IDP Assistant error', { error: err });
-            emit({ type: 'error', message: err.message ?? 'Unknown error' });
+            const msg = err?.message ?? String(err) ?? 'Unknown error';
+            logger.error(`IDP Assistant error: ${msg}`, { stack: err?.stack, cause: String(err?.cause ?? '') });
+            emit({ type: 'error', message: msg });
           } finally {
             res.end();
           }
