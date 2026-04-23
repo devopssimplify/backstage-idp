@@ -21,10 +21,12 @@ const EXAMPLES = [
   'List all environments',
   'Show resources for pds-515',
   'What apps are deployed to pds-515?',
-  'List all network codes',
   'Show current month cost summary',
-  'Show cost trends for last 3 months',
   'Show cost breakdown for cn580004',
+  'List all GitHub repos',
+  'Show recent workflow runs for backstage-idp',
+  'Show failed pipelines for idp-poc-gitops',
+  'List open PRs for backstage-idp',
 ];
 
 const TOOL_LABELS: Record<string, string> = {
@@ -36,6 +38,11 @@ const TOOL_LABELS: Record<string, string> = {
   get_cost_summary: 'Fetching cost summary',
   get_cost_trends: 'Fetching cost trends',
   get_cost_breakdown: 'Fetching cost breakdown',
+  list_github_repos: 'Listing GitHub repos',
+  list_repo_workflows: 'Listing workflows',
+  list_workflow_runs: 'Fetching pipeline runs',
+  get_workflow_run: 'Fetching run details',
+  list_pull_requests: 'Fetching pull requests',
 };
 
 const useStyles = makeStyles(theme => ({

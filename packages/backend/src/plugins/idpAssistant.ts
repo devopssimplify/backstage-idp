@@ -75,6 +75,59 @@ const TOOLS: Anthropic.Tool[] = [
       required: ['network_code'],
     },
   },
+  {
+    name: 'list_github_repos',
+    description: 'List all GitHub repositories in the organization',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'list_repo_workflows',
+    description: 'List all GitHub Actions workflows defined in a repository',
+    input_schema: {
+      type: 'object',
+      properties: {
+        repo: { type: 'string', description: 'Repository name e.g. backstage-idp' },
+      },
+      required: ['repo'],
+    },
+  },
+  {
+    name: 'list_workflow_runs',
+    description: 'List recent GitHub Actions workflow runs for a repository, optionally filtered by status',
+    input_schema: {
+      type: 'object',
+      properties: {
+        repo: { type: 'string', description: 'Repository name e.g. backstage-idp' },
+        status: { type: 'string', description: 'Filter by status: success, failure, in_progress, queued, cancelled' },
+        limit: { type: 'string', description: 'Number of runs to return (default 10, max 30)' },
+      },
+      required: ['repo'],
+    },
+  },
+  {
+    name: 'get_workflow_run',
+    description: 'Get full details of a specific GitHub Actions workflow run by run ID',
+    input_schema: {
+      type: 'object',
+      properties: {
+        repo: { type: 'string', description: 'Repository name e.g. backstage-idp' },
+        run_id: { type: 'string', description: 'Workflow run ID (number)' },
+      },
+      required: ['repo', 'run_id'],
+    },
+  },
+  {
+    name: 'list_pull_requests',
+    description: 'List pull requests for a GitHub repository',
+    input_schema: {
+      type: 'object',
+      properties: {
+        repo: { type: 'string', description: 'Repository name e.g. backstage-idp' },
+        state: { type: 'string', description: 'PR state: open (default), closed, all' },
+      },
+      required: ['repo'],
+    },
+  },
 ];
 
 const pick = (e: any) => ({
@@ -94,6 +147,8 @@ async function runTool(
   catalogUrl: string,
   token: string,
   costUrl: string,
+  githubToken: string,
+  githubOrg: string,
 ): Promise<string> {
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
@@ -106,6 +161,13 @@ async function runTool(
   const getCost = async (path: string) => {
     const r = await fetch(`${costUrl}${path}`);
     if (!r.ok) return { error: `Cost API error: ${r.status}` };
+    return r.json();
+  };
+
+  const ghHeaders = { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
+  const ghGet = async (path: string) => {
+    const r = await fetch(`https://api.github.com${path}`, { headers: ghHeaders });
+    if (!r.ok) return { error: `GitHub API error: ${r.status} ${r.statusText}` };
     return r.json();
   };
 
@@ -146,6 +208,55 @@ async function runTool(
     }
     case 'get_cost_breakdown':
       return JSON.stringify(await getCost(`/costs/breakdown?networkCode=${input.network_code}`));
+    case 'list_github_repos': {
+      const data = await ghGet(`/orgs/${githubOrg}/repos?per_page=50&sort=updated`);
+      if (data.error) return JSON.stringify(data);
+      return JSON.stringify((data as any[]).map((r: any) => ({
+        name: r.name, description: r.description, language: r.language,
+        default_branch: r.default_branch, visibility: r.visibility,
+        updated_at: r.updated_at, html_url: r.html_url,
+      })));
+    }
+    case 'list_repo_workflows': {
+      const data = await ghGet(`/repos/${githubOrg}/${input.repo}/actions/workflows`);
+      if (data.error) return JSON.stringify(data);
+      return JSON.stringify((data as any).workflows?.map((w: any) => ({
+        id: w.id, name: w.name, state: w.state, path: w.path, html_url: w.html_url,
+      })));
+    }
+    case 'list_workflow_runs': {
+      const limit = Math.min(parseInt(input.limit ?? '10', 10), 30);
+      const qs = input.status ? `&status=${input.status}` : '';
+      const data = await ghGet(`/repos/${githubOrg}/${input.repo}/actions/runs?per_page=${limit}${qs}`);
+      if (data.error) return JSON.stringify(data);
+      return JSON.stringify((data as any).workflow_runs?.map((r: any) => ({
+        id: r.id, name: r.name, status: r.status, conclusion: r.conclusion,
+        head_branch: r.head_branch, event: r.event,
+        created_at: r.created_at, updated_at: r.updated_at, html_url: r.html_url,
+      })));
+    }
+    case 'get_workflow_run': {
+      const data = await ghGet(`/repos/${githubOrg}/${input.repo}/actions/runs/${input.run_id}`);
+      if (data.error) return JSON.stringify(data);
+      const r = data as any;
+      return JSON.stringify({
+        id: r.id, name: r.name, status: r.status, conclusion: r.conclusion,
+        head_branch: r.head_branch, head_sha: r.head_sha?.slice(0, 8),
+        event: r.event, created_at: r.created_at, updated_at: r.updated_at,
+        run_attempt: r.run_attempt, html_url: r.html_url,
+      });
+    }
+    case 'list_pull_requests': {
+      const state = input.state ?? 'open';
+      const data = await ghGet(`/repos/${githubOrg}/${input.repo}/pulls?state=${state}&per_page=20&sort=updated`);
+      if (data.error) return JSON.stringify(data);
+      return JSON.stringify((data as any[]).map((pr: any) => ({
+        number: pr.number, title: pr.title, state: pr.state,
+        author: pr.user?.login, head: pr.head?.ref, base: pr.base?.ref,
+        created_at: pr.created_at, updated_at: pr.updated_at,
+        draft: pr.draft, html_url: pr.html_url,
+      })));
+    }
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
   }
@@ -202,6 +313,8 @@ export default createBackendPlugin({
               onBehalfOf: await auth.getOwnServiceCredentials(),
               targetPluginId: 'catalog',
             });
+            const githubToken = config.getOptionalString('integrations.github[0].token') ?? process.env.GITHUB_TOKEN ?? '';
+            const githubOrg = config.getOptionalString('idpAssistant.githubOrg') ?? process.env.GITHUB_ORG ?? 'devopssimplify';
 
             const anthropic = new Anthropic({ apiKey });
             const messages: Anthropic.MessageParam[] = [
@@ -252,6 +365,8 @@ Be concise. Use bullet points for lists. Include relevant names and links when a
                   catalogUrl,
                   token,
                   costUrl,
+                  githubToken,
+                  githubOrg,
                 );
                 emit({ type: 'tool_done', name: tu.name });
                 results.push({
