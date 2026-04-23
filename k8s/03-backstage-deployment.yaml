@@ -58,6 +58,11 @@ spec:
             secretKeyRef:
               name: backstage-secrets
               key: K8S_SERVICE_ACCOUNT_TOKEN
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backstage-secrets
+              key: ANTHROPIC_API_KEY
         - name: NODE_ENV
           value: production
         resources:
