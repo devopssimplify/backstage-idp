@@ -48,6 +48,33 @@ const TOOLS: Anthropic.Tool[] = [
       required: ['kind', 'name'],
     },
   },
+  {
+    name: 'get_cost_summary',
+    description: 'Get current month GCP cost summary grouped by network code (cost center)',
+    input_schema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'get_cost_trends',
+    description: 'Get monthly GCP cost trends for the last N months, grouped by network code',
+    input_schema: {
+      type: 'object',
+      properties: {
+        months: { type: 'string', description: 'Number of months to fetch (1-12, default 3)' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'get_cost_breakdown',
+    description: 'Get current month GCP cost breakdown by GCP service for a specific network code',
+    input_schema: {
+      type: 'object',
+      properties: {
+        network_code: { type: 'string', description: 'Network code / cost center e.g. cn580004' },
+      },
+      required: ['network_code'],
+    },
+  },
 ];
 
 const pick = (e: any) => ({
@@ -66,6 +93,7 @@ async function runTool(
   input: Record<string, string>,
   catalogUrl: string,
   token: string,
+  costUrl: string,
 ): Promise<string> {
   const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
@@ -73,6 +101,12 @@ async function runTool(
     const r = await fetch(`${catalogUrl}/entities?${qs}`, { headers });
     if (!r.ok) return [];
     return (await r.json()) as any[];
+  };
+
+  const getCost = async (path: string) => {
+    const r = await fetch(`${costUrl}${path}`);
+    if (!r.ok) return { error: `Cost API error: ${r.status}` };
+    return r.json();
   };
 
   switch (name) {
@@ -104,6 +138,14 @@ async function runTool(
       if (!r.ok) return JSON.stringify({ error: `Not found: ${input.kind}/${input.name}` });
       return JSON.stringify(pick(await r.json()));
     }
+    case 'get_cost_summary':
+      return JSON.stringify(await getCost('/costs/summary'));
+    case 'get_cost_trends': {
+      const months = input.months ?? '3';
+      return JSON.stringify(await getCost(`/costs?months=${months}`));
+    }
+    case 'get_cost_breakdown':
+      return JSON.stringify(await getCost(`/costs/breakdown?networkCode=${input.network_code}`));
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
   }
@@ -152,7 +194,10 @@ export default createBackendPlugin({
           };
 
           try {
-            const catalogUrl = await discovery.getBaseUrl('catalog');
+            const [catalogUrl, costUrl] = await Promise.all([
+              discovery.getBaseUrl('catalog'),
+              discovery.getBaseUrl('cost'),
+            ]);
             const { token } = await auth.getPluginRequestToken({
               onBehalfOf: await auth.getOwnServiceCredentials(),
               targetPluginId: 'catalog',
@@ -206,6 +251,7 @@ Be concise. Use bullet points for lists. Include relevant names and links when a
                   tu.input as Record<string, string>,
                   catalogUrl,
                   token,
+                  costUrl,
                 );
                 emit({ type: 'tool_done', name: tu.name });
                 results.push({

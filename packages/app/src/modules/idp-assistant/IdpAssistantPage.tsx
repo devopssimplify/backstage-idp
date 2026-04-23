@@ -22,7 +22,9 @@ const EXAMPLES = [
   'Show resources for pds-515',
   'What apps are deployed to pds-515?',
   'List all network codes',
-  'Show all systems in the catalog',
+  'Show current month cost summary',
+  'Show cost trends for last 3 months',
+  'Show cost breakdown for cn580004',
 ];
 
 const TOOL_LABELS: Record<string, string> = {
@@ -31,6 +33,9 @@ const TOOL_LABELS: Record<string, string> = {
   list_applications: 'Fetching applications',
   list_systems: 'Listing systems',
   get_entity: 'Looking up entity',
+  get_cost_summary: 'Fetching cost summary',
+  get_cost_trends: 'Fetching cost trends',
+  get_cost_breakdown: 'Fetching cost breakdown',
 };
 
 const useStyles = makeStyles(theme => ({

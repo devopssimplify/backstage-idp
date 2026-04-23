@@ -52,6 +52,28 @@ server.tool(
   }),
 );
 
+server.tool('get_cost_summary', 'Get current month GCP cost summary by network code', {}, async () => ({
+  content: [{ type: 'text', text: await runTool('get_cost_summary', {}, ctx) }],
+}));
+
+server.tool(
+  'get_cost_trends',
+  'Get monthly GCP cost trends for the last N months by network code',
+  { months: z.string().optional().describe('Number of months (1-12, default 3)') },
+  async ({ months }) => ({
+    content: [{ type: 'text', text: await runTool('get_cost_trends', { months: months ?? '3' }, ctx) }],
+  }),
+);
+
+server.tool(
+  'get_cost_breakdown',
+  'Get GCP cost breakdown by service for a specific network code',
+  { network_code: z.string().describe('Network code e.g. cn580004') },
+  async ({ network_code }) => ({
+    content: [{ type: 'text', text: await runTool('get_cost_breakdown', { network_code }, ctx) }],
+  }),
+);
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);

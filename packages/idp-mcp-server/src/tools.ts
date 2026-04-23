@@ -2,6 +2,12 @@ export interface ToolContext {
   backstageUrl: string;
 }
 
+async function costFetch(backstageUrl: string, path: string): Promise<any> {
+  const res = await fetch(`${backstageUrl}/api/cost${path}`);
+  if (!res.ok) return { error: `Cost API error: ${res.status}` };
+  return res.json();
+}
+
 const pick = (e: any) => ({
   name: e.metadata?.name,
   description: e.metadata?.description ?? '',
@@ -67,6 +73,22 @@ export async function getEntity(
   return JSON.stringify(pick(entity), null, 2);
 }
 
+export async function getCostSummary(ctx: ToolContext): Promise<string> {
+  return JSON.stringify(await costFetch(ctx.backstageUrl, '/costs/summary'), null, 2);
+}
+
+export async function getCostTrends(ctx: ToolContext, months: string = '3'): Promise<string> {
+  return JSON.stringify(await costFetch(ctx.backstageUrl, `/costs?months=${months}`), null, 2);
+}
+
+export async function getCostBreakdown(ctx: ToolContext, networkCode: string): Promise<string> {
+  return JSON.stringify(
+    await costFetch(ctx.backstageUrl, `/costs/breakdown?networkCode=${networkCode}`),
+    null,
+    2,
+  );
+}
+
 export const TOOL_DEFINITIONS = [
   {
     name: 'list_environments',
@@ -116,6 +138,33 @@ export const TOOL_DEFINITIONS = [
       required: ['kind', 'name'],
     },
   },
+  {
+    name: 'get_cost_summary',
+    description: 'Get current month GCP cost summary grouped by network code (cost center)',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'get_cost_trends',
+    description: 'Get monthly GCP cost trends for the last N months grouped by network code',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        months: { type: 'string', description: 'Number of months to fetch (1-12, default 3)' },
+      },
+      required: [],
+    },
+  },
+  {
+    name: 'get_cost_breakdown',
+    description: 'Get current month GCP cost breakdown by GCP service for a specific network code',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        network_code: { type: 'string', description: 'Network code e.g. cn580004' },
+      },
+      required: ['network_code'],
+    },
+  },
 ];
 
 export async function runTool(
@@ -134,6 +183,12 @@ export async function runTool(
       return listSystems(ctx);
     case 'get_entity':
       return getEntity(ctx, args.kind, args.name);
+    case 'get_cost_summary':
+      return getCostSummary(ctx);
+    case 'get_cost_trends':
+      return getCostTrends(ctx, args.months);
+    case 'get_cost_breakdown':
+      return getCostBreakdown(ctx, args.network_code);
     default:
       return JSON.stringify({ error: `Unknown tool: ${name}` });
   }
