@@ -313,7 +313,7 @@ export default createBackendPlugin({
               onBehalfOf: await auth.getOwnServiceCredentials(),
               targetPluginId: 'catalog',
             });
-            const githubToken = config.getOptionalString('integrations.github[0].token') ?? process.env.GITHUB_TOKEN ?? '';
+            const githubToken = process.env.GITHUB_TOKEN ?? '';
             const githubOrg = config.getOptionalString('idpAssistant.githubOrg') ?? process.env.GITHUB_ORG ?? 'devopssimplify';
 
             const anthropic = new Anthropic({ apiKey });
