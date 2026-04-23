@@ -167,8 +167,13 @@ async function runTool(
   const ghHeaders = { Authorization: `Bearer ${githubToken}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
   const ghGet = async (path: string) => {
     const r = await fetch(`https://api.github.com${path}`, { headers: ghHeaders });
-    if (!r.ok) return { error: `GitHub API error: ${r.status} ${r.statusText}` };
+    if (!r.ok) return { error: `GitHub API error: ${r.status} ${r.statusText}`, status: r.status };
     return r.json();
+  };
+  const ghRepoBase = async () => {
+    const org = await ghGet(`/orgs/${githubOrg}/repos?per_page=50&sort=updated`);
+    if ((org as any).status === 404) return ghGet(`/users/${githubOrg}/repos?per_page=50&sort=updated`);
+    return org;
   };
 
   switch (name) {
@@ -209,8 +214,8 @@ async function runTool(
     case 'get_cost_breakdown':
       return JSON.stringify(await getCost(`/costs/breakdown?networkCode=${input.network_code}`));
     case 'list_github_repos': {
-      const data = await ghGet(`/orgs/${githubOrg}/repos?per_page=50&sort=updated`);
-      if (data.error) return JSON.stringify(data);
+      const data = await ghRepoBase();
+      if ((data as any).error && (data as any).status !== 404) return JSON.stringify(data);
       return JSON.stringify((data as any[]).map((r: any) => ({
         name: r.name, description: r.description, language: r.language,
         default_branch: r.default_branch, visibility: r.visibility,

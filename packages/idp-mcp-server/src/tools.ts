@@ -14,7 +14,7 @@ async function ghFetch(token: string, path: string): Promise<any> {
   const res = await fetch(`https://api.github.com${path}`, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' },
   });
-  if (!res.ok) return { error: `GitHub API error: ${res.status} ${res.statusText}` };
+  if (!res.ok) return { error: `GitHub API error: ${res.status} ${res.statusText}`, status: res.status };
   return res.json();
 }
 
@@ -84,7 +84,8 @@ export async function getEntity(
 }
 
 export async function listGithubRepos(ctx: ToolContext): Promise<string> {
-  const data = await ghFetch(ctx.githubToken, `/orgs/${ctx.githubOrg}/repos?per_page=50&sort=updated`);
+  let data = await ghFetch(ctx.githubToken, `/orgs/${ctx.githubOrg}/repos?per_page=50&sort=updated`);
+  if (data.status === 404) data = await ghFetch(ctx.githubToken, `/users/${ctx.githubOrg}/repos?per_page=50&sort=updated`);
   if (data.error) return JSON.stringify(data, null, 2);
   return JSON.stringify((data as any[]).map((r: any) => ({
     name: r.name, description: r.description, language: r.language,
