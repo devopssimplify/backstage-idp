@@ -189,7 +189,7 @@ export const IdpAssistantPage = () => {
                   size="small"
                   helperText="Ctrl+Enter to submit"
                 />
-                <Box display="flex" flexDirection="column" gap={1}>
+                <Box display="flex" flexDirection="column" style={{ gap: 8 }}>
                   <Button
                     variant="contained"
                     color="primary"

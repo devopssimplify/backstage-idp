@@ -186,7 +186,7 @@ Be concise. Use bullet points for lists. Include relevant names and links when a
 
               const final = await stream.finalMessage();
               const toolUses = final.content.filter(
-                (b): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
+                (b: Anthropic.ContentBlock): b is Anthropic.ToolUseBlock => b.type === 'tool_use',
               );
 
               if (toolUses.length === 0) break;
