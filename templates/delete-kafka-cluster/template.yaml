@@ -78,6 +78,7 @@ spec:
         content: |
           - Kafka cluster: `${{ parameters.namePrefix }}-kafka`
           - Kafka UI pod: `${{ parameters.namePrefix }}-kafka-ui`
+          - All topic files: `infra/kafka-topics-${{ parameters.namePrefix }}-*.yaml`
           - Namespace: `${{ parameters.environment }}`
     links:
       - title: View Workflow Run
