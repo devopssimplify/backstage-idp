@@ -53,11 +53,10 @@ spec:
       action: github:actions:dispatch
       input:
         repoUrl: github.com?repo=idp-poc-gitops&owner=devopssimplify
-        workflowId: delete-infra.yml
+        workflowId: delete-kafka-cluster.yml
         branchOrTagName: main
         workflowInputs:
-          resourceType: Kafka Cluster
-          resourceName: ${{ parameters.namePrefix }}
+          namePrefix: ${{ parameters.namePrefix }}
           environment: ${{ parameters.environment }}
           reason: ${{ parameters.reason if parameters.reason else 'No reason provided' }}
 
