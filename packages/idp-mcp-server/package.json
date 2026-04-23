@@ -1,0 +1,22 @@
+{
+  "name": "idp-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP server exposing Backstage IDP catalog tools for Claude Desktop / Claude Code",
+  "private": true,
+  "main": "dist/server.js",
+  "bin": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node src/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}

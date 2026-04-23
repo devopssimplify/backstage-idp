@@ -63,6 +63,9 @@ backend.add(import('@backstage/plugin-kubernetes-backend'));
 // GCP cost insights plugin
 backend.add(import('./plugins/cost'));
 
+// IDP Assistant plugin (Claude-powered catalog query)
+backend.add(import('./plugins/idpAssistant'));
+
 // notifications and signals plugins
 backend.add(import('@backstage/plugin-notifications-backend'));
 backend.add(import('@backstage/plugin-signals-backend'));

@@ -14,6 +14,7 @@ import DeleteIcon from '@material-ui/icons/Delete';
 import StorageIcon from '@material-ui/icons/Storage';
 import HistoryIcon from '@material-ui/icons/History';
 import MoneyIcon from '@material-ui/icons/AttachMoney';
+import AssistantIcon from '@material-ui/icons/EmojiObjects';
 import { SidebarSearchModal } from '@backstage/plugin-search';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
 import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
@@ -42,6 +43,14 @@ export const SidebarContent = NavContentBlueprint.make({
             <SidebarScrollWrapper>
               {nav.rest({ sortBy: 'title' })}
             </SidebarScrollWrapper>
+          </SidebarGroup>
+          <SidebarDivider />
+          <SidebarGroup label="IDP Assistant" icon={<AssistantIcon />}>
+            <SidebarItem
+              icon={AssistantIcon}
+              to="/idp-assistant"
+              text="IDP Assistant"
+            />
           </SidebarGroup>
           <SidebarDivider />
           <SidebarGroup label="IDP Monitoring" icon={<StorageIcon />}>
