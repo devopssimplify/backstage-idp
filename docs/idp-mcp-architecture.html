@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IDP MCP Server — Architecture & Flow</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  h2 { font-size: 16px; font-weight: 600; color: #94a3b8; margin-bottom: 24px; }
+  h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 12px; }
+
+  .header { margin-bottom: 40px; }
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px; margin-right: 6px;
+    background: #1e3a5f; color: #60a5fa;
+  }
+
+  .section { margin-bottom: 48px; }
+
+  /* ── ARCH DIAGRAM ─────────────────────────────── */
+  .arch {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr 40px 1fr 40px 1fr;
+    align-items: center;
+    gap: 0;
+    background: #13171f;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 32px 24px;
+    overflow-x: auto;
+  }
+
+  .node {
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+    border: 1px solid;
+  }
+  .node-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .node-sub { font-size: 11px; opacity: .7; line-height: 1.4; }
+
+  .node-blue   { background: #0c1f3d; border-color: #1d4ed8; }
+  .node-purple { background: #1a0a2e; border-color: #7c3aed; }
+  .node-green  { background: #0a1f14; border-color: #16a34a; }
+  .node-orange { background: #1f1000; border-color: #d97706; }
+  .node-pink   { background: #1f0a1a; border-color: #db2777; }
+
+  .node-blue   .node-title { color: #60a5fa; }
+  .node-purple .node-title { color: #a78bfa; }
+  .node-green  .node-title { color: #4ade80; }
+  .node-orange .node-title { color: #fbbf24; }
+  .node-pink   .node-title { color: #f472b6; }
+
+  .arrow {
+    text-align: center;
+    font-size: 18px;
+    color: #334155;
+    user-select: none;
+  }
+  .arrow span { font-size: 10px; display: block; color: #475569; margin-top: 2px; }
+
+  /* ── FLOW DIAGRAM ─────────────────────────────── */
+  .flow {
+    background: #13171f;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 28px 24px;
+  }
+
+  .flow-row {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+  }
+
+  .step-num {
+    min-width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #1e3a5f;
+    color: #60a5fa;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-body { flex: 1; }
+  .step-label { font-size: 13px; font-weight: 600; color: #e2e8f0; margin-bottom: 3px; }
+  .step-detail { font-size: 11px; color: #64748b; line-height: 1.5; }
+  .step-code {
+    display: inline-block;
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 10px;
+    background: #0f172a;
+    color: #7dd3fc;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid #1e3a5f;
+    margin-top: 4px;
+  }
+
+  .flow-connector {
+    width: 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .flow-line {
+    width: 2px;
+    flex: 1;
+    background: #1e293b;
+    min-height: 28px;
+  }
+  .flow-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #334155;
+    flex-shrink: 0;
+  }
+
+  .flow-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0;
+  }
+  .flow-divider-line { flex: 1; height: 1px; background: #1e293b; }
+  .flow-divider-text { font-size: 10px; color: #475569; white-space: nowrap; }
+
+  /* ── TOOLS GRID ───────────────────────────────── */
+  .tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .tool-card {
+    background: #13171f;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 14px;
+    transition: border-color .15s;
+  }
+  .tool-card:hover { border-color: #334155; }
+
+  .tool-name {
+    font-family: 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .tool-desc { font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 8px; }
+  .tool-params { display: flex; flex-wrap: wrap; gap: 4px; }
+  .param-tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .param-req  { background: #0c1f3d; border-color: #1d4ed8; color: #93c5fd; }
+  .param-opt  { background: #1f1000; border-color: #92400e; color: #fcd34d; }
+  .param-none { background: #0a1f14; border-color: #166534; color: #86efac; font-style: italic; }
+
+  .cat-catalog { color: #60a5fa; }
+  .cat-cost    { color: #4ade80; }
+
+  /* ── TWO-PATH DIAGRAM ─────────────────────────── */
+  .two-path {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .path-card {
+    background: #13171f;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    padding: 24px 20px;
+  }
+
+  .path-title {
+    font-size: 14px; font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .path-sub { font-size: 11px; color: #64748b; margin-bottom: 20px; }
+
+  .path-step {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    background: #0d1117;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid #1e293b;
+  }
+  .path-step-icon { font-size: 16px; flex-shrink: 0; }
+  .path-step-text { font-size: 12px; color: #cbd5e1; }
+  .path-step-code {
+    font-family: monospace; font-size: 10px; color: #7dd3fc;
+    background: #0f172a; padding: 1px 5px; border-radius: 3px;
+    display: block; margin-top: 3px;
+  }
+  .path-down {
+    text-align: center; font-size: 14px; color: #334155;
+    margin: 0 0 4px;
+  }
+
+  .tag-sse { background:#1a0a2e; color:#a78bfa; border:1px solid #6d28d9; border-radius:4px; font-size:10px; padding:1px 6px; margin-left:6px; }
+  .tag-stdio { background:#0a1f14; color:#4ade80; border:1px solid #15803d; border-radius:4px; font-size:10px; padding:1px 6px; margin-left:6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>IDP MCP Server</h1>
+  <h2>Architecture &amp; Flow Diagram</h2>
+  <span class="badge">Backstage</span>
+  <span class="badge">Claude AI</span>
+  <span class="badge">MCP</span>
+  <span class="badge">GKE</span>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1 — HIGH-LEVEL ARCH
+════════════════════════════════════════════════ -->
+<div class="section">
+  <h3>High-Level Architecture</h3>
+  <div class="arch">
+
+    <div class="node node-blue">
+      <div class="node-title">👤 Engineer</div>
+      <div class="node-sub">Browser<br>IDP Assistant Page<br><code style="font-size:10px">/idp-assistant</code></div>
+    </div>
+
+    <div class="arrow">→<span>HTTP POST<br>SSE stream</span></div>
+
+    <div class="node node-purple">
+      <div class="node-title">⚙️ Backend Plugin</div>
+      <div class="node-sub">idpAssistant.ts<br>Express Router<br><code style="font-size:10px">/api/idp-assistant/query</code></div>
+    </div>
+
+    <div class="arrow">→<span>HTTPS<br>Streaming</span></div>
+
+    <div class="node node-pink">
+      <div class="node-title">🤖 Claude AI</div>
+      <div class="node-sub">claude-sonnet-4-6<br>Anthropic API<br>Agentic tool loop</div>
+    </div>
+
+    <div class="arrow">→<span>tool calls<br>↩ results</span></div>
+
+    <div class="node node-green">
+      <div class="node-title">🗄️ Backstage APIs</div>
+      <div class="node-sub">Catalog API<br>Cost Insights API<br>Discovery-resolved URLs</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2 — TWO PATHS
+════════════════════════════════════════════════ -->
+<div class="section">
+  <h3>Two Ways to Use the MCP Server</h3>
+  <div class="two-path">
+
+    <!-- PATH A -->
+    <div class="path-card">
+      <div class="path-title">🖥️ IDP Assistant Page <span class="tag-sse">SSE</span></div>
+      <div class="path-sub">For engineers inside Backstage — natural-language chat UI</div>
+
+      <div class="path-step">
+        <div class="path-step-icon">👤</div>
+        <div class="path-step-text">Engineer types question in Backstage
+          <span class="path-step-code">"Show cost breakdown for cn580004"</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">📡</div>
+        <div class="path-step-text">POST request with SSE response
+          <span class="path-step-code">POST /api/idp-assistant/query</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">🤖</div>
+        <div class="path-step-text">Claude decides which tool to call
+          <span class="path-step-code">→ get_cost_breakdown(cn580004)</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">🗄️</div>
+        <div class="path-step-text">Backend calls Backstage Cost API
+          <span class="path-step-code">GET /api/cost/costs/breakdown?networkCode=cn580004</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">✍️</div>
+        <div class="path-step-text">Claude streams answer back to browser
+          <span class="path-step-code">data: {"type":"text","content":"..."}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PATH B -->
+    <div class="path-card">
+      <div class="path-title">🔌 MCP Client (Claude Desktop) <span class="tag-stdio">stdio</span></div>
+      <div class="path-sub">For platform engineers using Claude Desktop or any MCP-compatible client</div>
+
+      <div class="path-step">
+        <div class="path-step-icon">💬</div>
+        <div class="path-step-text">Engineer asks Claude Desktop
+          <span class="path-step-code">"What are the cost trends for last 6 months?"</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">🖥️</div>
+        <div class="path-step-text">Claude Desktop spawns MCP server via stdio
+          <span class="path-step-code">node idp-mcp-server/dist/server.js</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">🤖</div>
+        <div class="path-step-text">Claude calls tool over stdio JSON-RPC
+          <span class="path-step-code">→ get_cost_trends({ months: "6" })</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">🌐</div>
+        <div class="path-step-text">MCP server calls Backstage external URL
+          <span class="path-step-code">GET http://35.188.96.202/api/cost/costs?months=6</span>
+        </div>
+      </div>
+      <div class="path-down">↓</div>
+      <div class="path-step">
+        <div class="path-step-icon">✅</div>
+        <div class="path-step-text">Result returned to Claude Desktop
+          <span class="path-step-code">{ costs: [...], mock: false }</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3 — DETAILED FLOW (IDP ASSISTANT)
+════════════════════════════════════════════════ -->
+<div class="section">
+  <h3>Detailed Request Flow — IDP Assistant Backend</h3>
+  <div class="flow">
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div><div class="flow-line"></div></div>
+      <div class="flow-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-label">Frontend sends POST with question</div>
+          <div class="step-detail">React page calls fetchApi with JSON body</div>
+          <div class="step-code">POST /api/idp-assistant/query  { "question": "..." }</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div><div class="flow-line"></div></div>
+      <div class="flow-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-label">Backend opens SSE stream</div>
+          <div class="step-detail">Sets Content-Type: text/event-stream, flushes headers immediately so the browser starts receiving data</div>
+          <div class="step-code">res.setHeader('Content-Type', 'text/event-stream')  →  res.flushHeaders()</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div><div class="flow-line"></div></div>
+      <div class="flow-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-label">Resolve internal service URLs</div>
+          <div class="step-detail">Uses Backstage Discovery API to get internal cluster URLs and mints a service-to-service auth token for the catalog</div>
+          <div class="step-code">discovery.getBaseUrl('catalog')  •  discovery.getBaseUrl('cost')</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div><div class="flow-line"></div></div>
+      <div class="flow-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-label">Start Claude streaming (Turn 1…N, max 10)</div>
+          <div class="step-detail">Calls Anthropic API with the question, system prompt, and tool definitions. As Claude writes text, each chunk is immediately emitted as an SSE event</div>
+          <div class="step-code">anthropic.messages.stream({ model: 'claude-sonnet-4-6', tools: TOOLS, ... })</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div><div class="flow-line"></div></div>
+      <div class="flow-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-label">Claude requests tool execution</div>
+          <div class="step-detail">If Claude's response contains tool_use blocks, the backend emits a tool_start event so the UI shows a spinner chip, then executes the tool locally</div>
+          <div class="step-code">data: {"type":"tool_start","name":"get_cost_summary"}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div><div class="flow-line"></div></div>
+      <div class="flow-step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <div class="step-label">Backend calls Backstage API and returns result to Claude</div>
+          <div class="step-detail">For catalog tools: uses internal URL + bearer token. For cost tools: calls cost plugin directly (unauthenticated). Result is added to the message thread as tool_result</div>
+          <div class="step-code">fetch(`${catalogUrl}/entities?filter=kind=Resource`) → append to messages[]</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-row">
+      <div class="flow-connector"><div class="flow-dot"></div></div>
+      <div class="flow-step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <div class="step-label">Claude streams final answer &amp; SSE closes</div>
+          <div class="step-detail">Claude writes a human-readable answer using the tool results. Each text chunk streams to the browser. When Claude stops calling tools, the loop ends and the stream is closed</div>
+          <div class="step-code">data: {"type":"text","content":"..."}  →  data: {"type":"done"}</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 4 — TOOL REFERENCE
+════════════════════════════════════════════════ -->
+<div class="section">
+  <h3>Available Tools</h3>
+  <div class="tools-grid">
+
+    <div class="tool-card">
+      <div class="tool-name cat-catalog">list_environments</div>
+      <div class="tool-desc">List all environment/namespace resources registered in the IDP catalog</div>
+      <div class="tool-params"><span class="param-none">no params</span></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-catalog">get_environment_resources</div>
+      <div class="tool-desc">Get all infra resources (Cloud SQL, GCS, Redis) provisioned for an environment</div>
+      <div class="tool-params">
+        <span class="param-req">environment (req)</span>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-catalog">list_applications</div>
+      <div class="tool-desc">List all application components deployed to a specific environment</div>
+      <div class="tool-params">
+        <span class="param-req">environment (req)</span>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-catalog">list_systems</div>
+      <div class="tool-desc">List all systems (network codes / cost centers) in the catalog</div>
+      <div class="tool-params"><span class="param-none">no params</span></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-catalog">get_entity</div>
+      <div class="tool-desc">Get full details of any catalog entity by kind and name</div>
+      <div class="tool-params">
+        <span class="param-req">kind (req)</span>
+        <span class="param-req">name (req)</span>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-cost">get_cost_summary</div>
+      <div class="tool-desc">Current month GCP spend grouped by network code — ideal for a quick overview</div>
+      <div class="tool-params"><span class="param-none">no params</span></div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-cost">get_cost_trends</div>
+      <div class="tool-desc">Monthly GCP cost history for the last N months, grouped by network code</div>
+      <div class="tool-params">
+        <span class="param-opt">months (opt, default 3)</span>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-name cat-cost">get_cost_breakdown</div>
+      <div class="tool-desc">Current month GCP spend broken down by service (K8s, Cloud SQL, GCS…) for one network code</div>
+      <div class="tool-params">
+        <span class="param-req">network_code (req)</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:14px; display:flex; gap:16px; font-size:11px; color:#475569;">
+    <span><span style="display:inline-block;width:10px;height:10px;background:#0c1f3d;border:1px solid #1d4ed8;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Catalog API (auth token required)</span>
+    <span><span style="display:inline-block;width:10px;height:10px;background:#0a1f14;border:1px solid #16a34a;border-radius:2px;margin-right:4px;vertical-align:middle"></span>Cost Insights API (unauthenticated)</span>
+    <span><span style="color:#fbbf24">■</span> optional param</span>
+    <span><span style="color:#93c5fd">■</span> required param</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 5 — COMPONENT MAP
+════════════════════════════════════════════════ -->
+<div class="section">
+  <h3>Key Files in the Monorepo</h3>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+    <div style="background:#13171f; border:1px solid #1e293b; border-radius:8px; padding:16px;">
+      <div style="font-size:12px; font-weight:700; color:#a78bfa; margin-bottom:12px;">🖥️ Backstage Backend</div>
+      <div style="font-size:11px; color:#64748b; line-height:2;">
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/backend/src/plugins/idpAssistant.ts</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">Claude agentic loop + SSE streaming + tool execution</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/backend/src/plugins/cost.ts</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">Cost API — BigQuery or mock data</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/backend/src/index.ts</span></div>
+        <div style="margin-left:12px; color:#475569;">Plugin registration</div>
+      </div>
+    </div>
+
+    <div style="background:#13171f; border:1px solid #1e293b; border-radius:8px; padding:16px;">
+      <div style="font-size:12px; font-weight:700; color:#60a5fa; margin-bottom:12px;">🌐 Backstage Frontend</div>
+      <div style="font-size:11px; color:#64748b; line-height:2;">
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/app/src/modules/idp-assistant/IdpAssistantPage.tsx</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">React UI with SSE reader, tool chips, streaming text</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/app/src/modules/idp-assistant/index.tsx</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">Plugin + page blueprint at /idp-assistant</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/app/src/modules/nav/Sidebar.tsx</span></div>
+        <div style="margin-left:12px; color:#475569;">Sidebar nav entry</div>
+      </div>
+    </div>
+
+    <div style="background:#13171f; border:1px solid #1e293b; border-radius:8px; padding:16px;">
+      <div style="font-size:12px; font-weight:700; color:#4ade80; margin-bottom:12px;">🔌 MCP Server (stdio)</div>
+      <div style="font-size:11px; color:#64748b; line-height:2;">
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/idp-mcp-server/src/server.ts</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">McpServer entry — registers all tools with zod schemas</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">packages/idp-mcp-server/src/tools.ts</span></div>
+        <div style="margin-left:12px; color:#475569;">Tool implementations — call Backstage external URL</div>
+      </div>
+    </div>
+
+    <div style="background:#13171f; border:1px solid #1e293b; border-radius:8px; padding:16px;">
+      <div style="font-size:12px; font-weight:700; color:#fbbf24; margin-bottom:12px;">☁️ Infrastructure</div>
+      <div style="font-size:11px; color:#64748b; line-height:2;">
+        <div><span style="color:#7dd3fc; font-family:monospace">k8s/03-backstage-deployment.yaml</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">GKE deployment — ANTHROPIC_API_KEY from secret</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">k8s/01-secrets.yaml</span></div>
+        <div style="margin-left:12px; color:#475569; margin-bottom:6px;">Kubernetes secrets template</div>
+        <div><span style="color:#7dd3fc; font-family:monospace">app-config.gke.yaml</span></div>
+        <div style="margin-left:12px; color:#475569;">GCP BigQuery billing config</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div style="text-align:center; font-size:11px; color:#334155; padding-top:16px; border-top:1px solid #1e293b; margin-top:8px;">
+  IDP Platform · Backstage + Claude AI + MCP · Generated 2026-04-23
+</div>
+
+</body>
+</html>
