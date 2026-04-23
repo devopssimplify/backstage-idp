@@ -1,5 +1,5 @@
 import { createBackendPlugin, coreServices } from '@backstage/backend-plugin-api';
-import { Router } from 'express';
+import { Router, json } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 
 const TOOLS: Anthropic.Tool[] = [
@@ -122,6 +122,7 @@ export default createBackendPlugin({
       },
       async init({ httpRouter, config, logger, discovery, auth }) {
         const router = Router();
+        router.use(json());
 
         router.post('/query', async (req, res) => {
           const { question } = req.body ?? {};
