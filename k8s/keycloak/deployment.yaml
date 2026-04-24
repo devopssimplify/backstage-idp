@@ -18,9 +18,7 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0
-          # start-dev: embedded H2 DB, good for initial setup.
-          # Switch to "start" with DB env vars for production.
-          args: ["start-dev"]
+          args: ["start", "--optimized"]
           env:
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
               valueFrom:
@@ -32,26 +30,21 @@ spec:
                 secretKeyRef:
                   name: keycloak-secret
                   key: admin-password
-            # Uncomment below and switch args to ["start"] for production w/ Cloud SQL
-            # - name: KC_DB
-            #   value: postgres
-            # - name: KC_DB_URL
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: keycloak-secret
-            #       key: db-url
-            # - name: KC_DB_USERNAME
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: keycloak-secret
-            #       key: db-username
-            # - name: KC_DB_PASSWORD
-            #   valueFrom:
-            #     secretKeyRef:
-            #       name: keycloak-secret
-            #       key: db-password
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: jdbc:postgresql://keycloak-postgres:5432/keycloak
+            - name: KC_DB_USERNAME
+              value: keycloak
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-secret
+                  key: db-password
             - name: KC_HTTP_ENABLED
               value: "true"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
             - name: KC_PROXY_HEADERS
               value: "xforwarded"
           ports:
