@@ -10,9 +10,6 @@ spec:
     app: keycloak
   ports:
     - name: http
-      port: 80
+      port: 8080
       targetPort: 8080
-  # LoadBalancer gives an external GCP IP so you can access the admin console
-  # and so Backstage backend can reach the JWKS endpoint.
-  # Change to ClusterIP if you use an Ingress/Gateway instead.
   type: LoadBalancer
