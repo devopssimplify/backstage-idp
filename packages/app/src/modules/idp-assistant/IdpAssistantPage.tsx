@@ -16,6 +16,9 @@ import SendIcon from '@material-ui/icons/Send';
 import ClearIcon from '@material-ui/icons/Clear';
 import BuildIcon from '@material-ui/icons/Build';
 import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { MermaidChart } from './MermaidChart';
 
 const EXAMPLES = [
   'List all environments',
@@ -27,6 +30,8 @@ const EXAMPLES = [
   'Show recent workflow runs for backstage-idp',
   'Show failed pipelines for idp-poc-gitops',
   'List open PRs for backstage-idp',
+  'Draw a pie chart of cost by service',
+  'Show cost trends as a bar chart',
 ];
 
 const TOOL_LABELS: Record<string, string> = {
@@ -50,13 +55,72 @@ const useStyles = makeStyles(theme => ({
     padding: theme.spacing(2.5),
     minHeight: 220,
     backgroundColor: theme.palette.background.default,
-    fontFamily: 'inherit',
     fontSize: 14,
     lineHeight: 1.7,
-    whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
     borderRadius: theme.shape.borderRadius,
     border: `1px solid ${theme.palette.divider}`,
+    '& h1, & h2, & h3, & h4': {
+      marginTop: theme.spacing(2),
+      marginBottom: theme.spacing(1),
+      fontWeight: 600,
+    },
+    '& h1': { fontSize: '1.5em' },
+    '& h2': { fontSize: '1.3em' },
+    '& h3': { fontSize: '1.1em' },
+    '& p': { marginBottom: theme.spacing(1) },
+    '& ul, & ol': { paddingLeft: theme.spacing(3), marginBottom: theme.spacing(1) },
+    '& li': { marginBottom: theme.spacing(0.25) },
+    '& code': {
+      backgroundColor: 'rgba(255,255,255,0.07)',
+      borderRadius: 3,
+      padding: '1px 5px',
+      fontFamily: 'monospace',
+      fontSize: '0.9em',
+    },
+    '& pre': {
+      backgroundColor: 'rgba(0,0,0,0.3)',
+      border: `1px solid ${theme.palette.divider}`,
+      borderRadius: 6,
+      padding: theme.spacing(1.5),
+      overflowX: 'auto',
+      marginBottom: theme.spacing(1),
+      '& code': {
+        background: 'none',
+        padding: 0,
+        fontSize: '0.88em',
+      },
+    },
+    '& table': {
+      borderCollapse: 'collapse',
+      width: '100%',
+      marginBottom: theme.spacing(1.5),
+      fontSize: 13,
+    },
+    '& th': {
+      backgroundColor: 'rgba(255,255,255,0.06)',
+      fontWeight: 600,
+      textAlign: 'left',
+      padding: '6px 10px',
+      borderBottom: `2px solid ${theme.palette.divider}`,
+    },
+    '& td': {
+      padding: '5px 10px',
+      borderBottom: `1px solid ${theme.palette.divider}`,
+    },
+    '& tr:hover td': {
+      backgroundColor: 'rgba(255,255,255,0.03)',
+    },
+    '& blockquote': {
+      borderLeft: `3px solid ${theme.palette.primary.main}`,
+      paddingLeft: theme.spacing(1.5),
+      color: theme.palette.text.secondary,
+      margin: `${theme.spacing(1)}px 0`,
+    },
+    '& strong': { fontWeight: 700 },
+    '& em': { fontStyle: 'italic' },
+    '& a': { color: theme.palette.primary.main },
+    '& hr': { border: 'none', borderTop: `1px solid ${theme.palette.divider}`, margin: `${theme.spacing(2)}px 0` },
   },
   toolRow: {
     display: 'flex',
@@ -83,6 +147,40 @@ const useStyles = makeStyles(theme => ({
 }));
 
 type ToolEvent = { name: string; done: boolean };
+
+const CodeBlock = ({
+  inline,
+  className,
+  children,
+  ...props
+}: {
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+}) => {
+  const language = /language-(\w+)/.exec(className ?? '')?.[1];
+  const code = String(children).replace(/\n$/, '');
+
+  if (!inline && language === 'mermaid') {
+    return <MermaidChart chart={code} />;
+  }
+
+  if (inline) {
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  }
+
+  return (
+    <pre>
+      <code className={className} {...props}>
+        {children}
+      </code>
+    </pre>
+  );
+};
 
 export const IdpAssistantPage = () => {
   const classes = useStyles();
@@ -193,7 +291,7 @@ export const IdpAssistantPage = () => {
                   minRows={2}
                   maxRows={6}
                   variant="outlined"
-                  placeholder="e.g. List all environments  •  Show resources for pds-515  •  What apps are in pds-515?"
+                  placeholder="e.g. List all environments  •  Show resources for pds-515  •  Draw a pie chart of cost by service"
                   value={question}
                   onChange={e => setQuestion(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -278,7 +376,12 @@ export const IdpAssistantPage = () => {
                   {error ? (
                     <Typography className={classes.errorText}>Error: {error}</Typography>
                   ) : response ? (
-                    response
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{ code: CodeBlock as any }}
+                    >
+                      {response}
+                    </ReactMarkdown>
                   ) : loading ? (
                     <Typography className={classes.placeholder}>Fetching data…</Typography>
                   ) : null}
