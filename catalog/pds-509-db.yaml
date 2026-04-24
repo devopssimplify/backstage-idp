@@ -1,0 +1,36 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-509-db
+  description: test
+  annotations:
+    backstage.io/kubernetes-id: cockroachdb-pds-509-db
+    backstage.io/kubernetes-namespace: dev
+    backstage.io/kubernetes-label-selector: app=cockroachdb-pds-509-db
+  tags:
+    - database
+    - cockroachdb
+    - dev
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cockroachdb-pds-509-db.yaml
+      icon: github
+spec:
+  type: database
+  lifecycle: dev
+  owner: group:default/data
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: CN580005
+  description: "Network code CN580005 — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/data
