@@ -1,0 +1,54 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: auth-namespace
+  description: "test"
+  tags:
+    - namespace
+    - environment
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/cluster/namespace-auth.yaml
+      icon: github
+spec:
+  type: environment
+  lifecycle: production
+  owner: group:default/data
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: auth-db
+  description: "Cloud SQL PostgreSQL instance for auth"
+  tags:
+    - cloudsql
+    - database
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cloudsql-auth.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/sql/instances/auth-db/overview?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: database
+  lifecycle: production
+  owner: group:default/data
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: CN580005
+  description: "Network code CN580005 — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/data
