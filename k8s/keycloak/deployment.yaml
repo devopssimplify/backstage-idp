@@ -18,7 +18,11 @@ spec:
       containers:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0
-          args: ["start", "--optimized"]
+          args:
+            - start
+            - --http-enabled=true
+            - --hostname-strict=false
+            - --proxy-headers=xforwarded
           env:
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
               valueFrom:
@@ -41,12 +45,6 @@ spec:
                 secretKeyRef:
                   name: keycloak-secret
                   key: db-password
-            - name: KC_HTTP_ENABLED
-              value: "true"
-            - name: KC_HOSTNAME_STRICT
-              value: "false"
-            - name: KC_PROXY_HEADERS
-              value: "xforwarded"
           ports:
             - name: http
               containerPort: 8080
@@ -54,19 +52,19 @@ spec:
             httpGet:
               path: /realms/master
               port: 8080
-            initialDelaySeconds: 40
+            initialDelaySeconds: 60
             periodSeconds: 10
-            failureThreshold: 6
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /realms/master
               port: 8080
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120
             periodSeconds: 30
           resources:
             requests:
-              memory: "512Mi"
-              cpu: "250m"
+              memory: 512Mi
+              cpu: 250m
             limits:
-              memory: "1Gi"
-              cpu: "500m"
+              memory: 1Gi
+              cpu: 500m
