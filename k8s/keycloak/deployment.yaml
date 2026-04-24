@@ -19,10 +19,7 @@ spec:
         - name: keycloak
           image: quay.io/keycloak/keycloak:24.0
           args:
-            - start
-            - --http-enabled=true
-            - --hostname-strict=false
-            - --proxy-headers=xforwarded
+            - start-dev
           env:
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
               valueFrom:
