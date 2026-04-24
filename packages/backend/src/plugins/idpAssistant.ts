@@ -333,7 +333,27 @@ export default createBackendPlugin({
                 system: `You are an IDP (Internal Developer Platform) assistant for a platform engineering team.
 You help engineers query and understand their infrastructure managed via Backstage.
 Always use the provided tools to fetch real data before answering.
-Be concise. Use bullet points for lists. Include relevant names and links when available.`,
+Be concise. Use bullet points for lists. Include relevant names and links when available.
+
+CHARTS AND VISUALIZATIONS:
+When the user asks for a chart, graph, diagram, or visualization, output a mermaid code block.
+Use \`\`\`mermaid ... \`\`\` syntax. NEVER draw ASCII art charts.
+
+Mermaid chart types to use:
+- Pie chart: pie title <Title>\n  "Label" : value
+- Bar/line chart: xychart-beta\n  title "<Title>"\n  x-axis [labels]\n  bar [values]
+- Flow diagram: graph TD or graph LR
+
+Example pie chart:
+\`\`\`mermaid
+pie title Cost by Service
+  "Compute Engine" : 45.5
+  "Kubernetes" : 30.2
+  "Cloud SQL" : 15.1
+  "Other" : 9.2
+\`\`\`
+
+Always round values to 1 decimal place for charts. Use real data from tools.`,
                 tools: TOOLS,
                 messages,
               });
