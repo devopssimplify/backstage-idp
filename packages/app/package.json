@@ -29,6 +29,7 @@
     "@backstage/plugin-kubernetes": "^0.12.17",
     "@backstage/plugin-notifications": "^0.5.15",
     "@backstage/plugin-org": "^0.7.0",
+    "@backstage/plugin-permission-common": "^0.9.0",
     "@backstage/plugin-scaffolder": "^1.36.1",
     "@backstage/plugin-search": "^1.7.0",
     "@backstage/plugin-signals": "^0.0.29",

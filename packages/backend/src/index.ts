@@ -7,6 +7,8 @@
  */
 
 import { createBackend } from '@backstage/backend-defaults';
+import { keycloakAuthModule } from './modules/keycloakAuth';
+import { permissionModuleIdpPolicy } from './plugins/permissions';
 
 const backend = createBackend();
 
@@ -25,9 +27,8 @@ backend.add(import('@backstage/plugin-techdocs-backend'));
 
 // auth plugin
 backend.add(import('@backstage/plugin-auth-backend'));
-// See https://backstage.io/docs/backend-system/building-backends/migrating#the-auth-plugin
-backend.add(import('@backstage/plugin-auth-backend-module-guest-provider'));
-// See https://backstage.io/docs/auth/guest/provider
+backend.add(import('@backstage/plugin-auth-backend-module-guest-provider')); // dev only
+backend.add(keycloakAuthModule); // OIDC — only active when auth.providers.oidc is in config
 
 // catalog plugin
 backend.add(import('@backstage/plugin-catalog-backend'));
@@ -41,10 +42,7 @@ backend.add(import('@backstage/plugin-catalog-backend-module-logs'));
 
 // permission plugin
 backend.add(import('@backstage/plugin-permission-backend'));
-// See https://backstage.io/docs/permissions/getting-started for how to create your own permission policy
-backend.add(
-  import('@backstage/plugin-permission-backend-module-allow-all-policy'),
-);
+backend.add(permissionModuleIdpPolicy); // role-based: admin / platform / infra / viewer
 
 // search plugin
 backend.add(import('@backstage/plugin-search-backend'));

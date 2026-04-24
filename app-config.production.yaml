@@ -29,8 +29,19 @@ backend:
       #     $file: <file-path>/ca/server.crt
 
 auth:
+  environment: production
+  session:
+    secret: ${AUTH_SESSION_SECRET}
   providers:
-    guest: {}
+    oidc:
+      production:
+        # Keycloak URL — set KEYCLOAK_BASE_URL to the LoadBalancer IP or domain
+        # e.g. http://34.x.x.x  or  https://keycloak.yourdomain.com
+        metadataUrl: ${KEYCLOAK_BASE_URL}/realms/backstage/.well-known/openid-configuration
+        clientId: ${KEYCLOAK_CLIENT_ID}
+        clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+        scope: 'openid profile email'
+        prompt: auto
 
 catalog:
   # Overrides the default list locations from app-config.yaml as these contain example data.
