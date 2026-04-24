@@ -1,0 +1,100 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-507-namespace
+  description: "test"
+  tags:
+    - namespace
+    - environment
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/cluster/namespace-pds-507.yaml
+      icon: github
+spec:
+  type: environment
+  lifecycle: production
+  owner: group:default/backend
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-507-db
+  description: "Cloud SQL PostgreSQL instance for pds-507"
+  tags:
+    - cloudsql
+    - database
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/cloudsql-pds-507.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/sql/instances/pds-507-db/overview?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: database
+  lifecycle: production
+  owner: group:default/backend
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-507-gcs
+  description: "Cloud Storage bucket for pds-507"
+  tags:
+    - gcs
+    - storage
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/gcs-pds-507.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/storage/browser/project-7d27fad9-61bb-42c4-b2e-pds-507-data?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: storage
+  lifecycle: production
+  owner: group:default/backend
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: Resource
+metadata:
+  name: pds-507-redis
+  description: "Memorystore Redis instance for pds-507"
+  tags:
+    - redis
+    - memorystore
+    - idp-managed
+    - network-code-cn580005
+  links:
+    - title: GitOps Source
+      url: https://github.com/devopssimplify/idp-poc-gitops/blob/main/infra/memorystore-pds-507.yaml
+      icon: github
+    - title: GCP Console
+      url: https://console.cloud.google.com/memorystore/redis/locations/us-central1/instances/pds-507-redis/details/overview?project=project-7d27fad9-61bb-42c4-b2e
+      icon: dashboard
+spec:
+  type: cache
+  lifecycle: production
+  owner: group:default/backend
+  system: CN580005
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: CN580005
+  description: "Network code CN580005 — all resources billed to this cost center"
+  tags:
+    - network-code
+    - idp-managed
+spec:
+  owner: group:default/backend
