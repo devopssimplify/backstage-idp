@@ -43,7 +43,7 @@ auth:
         metadataUrl: ${KEYCLOAK_BASE_URL}/realms/backstage/.well-known/openid-configuration
         clientId: ${KEYCLOAK_CLIENT_ID}
         clientSecret: ${KEYCLOAK_CLIENT_SECRET}
-        scope: 'openid profile email'
+        additionalScopes: ['profile', 'email']
         prompt: auto
 
 scaffolder:
