@@ -20,10 +20,6 @@ spec:
           image: quay.io/keycloak/keycloak:24.0
           args:
             - start-dev
-            - --hostname=136.113.61.100
-            - --hostname-port=8080
-            - --hostname-strict=false
-            - --hostname-strict-https=false
           env:
             - name: KEYCLOAK_ADMIN
               valueFrom:
