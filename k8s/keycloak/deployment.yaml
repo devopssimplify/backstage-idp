@@ -42,6 +42,12 @@ spec:
                 secretKeyRef:
                   name: keycloak-secret
                   key: db-password
+            - name: KC_PROXY
+              value: edge
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            - name: KC_HOSTNAME_STRICT_HTTPS
+              value: "false"
 
           ports:
             - name: http
