@@ -23,10 +23,22 @@ export const keycloakAuthModule = createBackendModule({
               const email = profile.email;
               if (!email) throw new Error('No email in OIDC profile');
 
-              // Keycloak puts roles in realm_access.roles of the JWT claims
-              const claims = (result.fullProfile as any)?._json ?? result.fullProfile as any;
-              const keycloakRoles: string[] =
-                claims?.realm_access?.roles ?? [];
+              // Read roles from the ID token JWT directly (most reliable)
+              let keycloakRoles: string[] = [];
+              const idToken = (result.session as any)?.idToken;
+              if (idToken) {
+                try {
+                  const payload = JSON.parse(
+                    Buffer.from(idToken.split('.')[1], 'base64url').toString(),
+                  );
+                  keycloakRoles = payload?.realm_access?.roles ?? [];
+                } catch {}
+              }
+              // Fallback to fullProfile claims
+              if (!keycloakRoles.length) {
+                const claims = (result.fullProfile as any)?._json ?? result.fullProfile as any;
+                keycloakRoles = claims?.realm_access?.roles ?? [];
+              }
 
               const idpRoles = keycloakRoles.filter(r => IDP_ROLES.has(r));
 
