@@ -57,7 +57,7 @@ api("POST", f"/admin/realms/{REALM}/clients/{client_uuid}/protocol-mappers/model
 })
 
 # Create IDP roles
-for role in ["admin", "platform", "infra", "viewer"]:
+for role in ["admin", "platform", "infra", "viewer", "dev", "qa"]:
     print(f"Creating role '{role}'...")
     api("POST", f"/admin/realms/{REALM}/roles", {"name": role})
 

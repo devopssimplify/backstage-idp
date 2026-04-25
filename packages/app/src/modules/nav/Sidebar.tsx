@@ -18,6 +18,7 @@ import HistoryIcon from '@material-ui/icons/History';
 import MoneyIcon from '@material-ui/icons/AttachMoney';
 import AssistantIcon from '@material-ui/icons/EmojiObjects';
 import AddBoxIcon from '@material-ui/icons/AddBox';
+import CloudUploadIcon from '@material-ui/icons/CloudUpload';
 import { SidebarSearchModal } from '@backstage/plugin-search';
 import { UserSettingsSignInAvatar } from '@backstage/plugin-user-settings';
 import { NotificationsSidebarItem } from '@backstage/plugin-notifications';
@@ -28,6 +29,8 @@ type RoleState = {
   isAdmin: boolean;
   isPlatform: boolean;
   isInfra: boolean;
+  isDev: boolean;
+  isQa: boolean;
 };
 
 function useIdpRoles(): RoleState {
@@ -38,6 +41,8 @@ function useIdpRoles(): RoleState {
     isAdmin: false,
     isPlatform: false,
     isInfra: false,
+    isDev: false,
+    isQa: false,
   });
 
   useEffect(() => {
@@ -54,6 +59,8 @@ function useIdpRoles(): RoleState {
         isAdmin: groups.includes('admin'),
         isPlatform: groups.includes('platform'),
         isInfra: groups.includes('infra'),
+        isDev: groups.includes('dev'),
+        isQa: groups.includes('qa'),
       });
     });
   }, [identityApi]);
@@ -68,20 +75,19 @@ export const SidebarContent = NavContentBlueprint.make({
         <SidebarItem icon={() => item.icon} to={item.href} text={item.title} />
       ));
 
-      // Skipped items
       nav.take('page:search');
 
-      const { loaded, isGuest, isAdmin, isPlatform, isInfra } = useIdpRoles();
+      const { loaded, isGuest, isAdmin, isPlatform, isInfra, isDev, isQa } = useIdpRoles();
 
-      // While loading: show everything (avoids flash of hidden items)
-      // Guest (dev mode): show everything
       const showAll = !loaded || isGuest;
 
       // Role gates
-      const canProvision = showAll || isAdmin || isPlatform || isInfra;
-      const canViewCost   = showAll || isAdmin || isPlatform || isInfra;
-      const canAssist     = showAll || isAdmin || isPlatform || isInfra;
-      const canDelete     = showAll || isAdmin;
+      const canAssist        = showAll || isAdmin || isPlatform;
+      const canViewCost      = showAll || isAdmin || isPlatform || isInfra;
+      const canProvisionInfra = showAll || isAdmin || isPlatform || isInfra;
+      const canDeployAndEnv  = showAll || isAdmin || isPlatform || isDev || isQa;
+      const canDeleteInfra   = showAll || isAdmin || isInfra;
+      const canDeleteEnv     = showAll || isAdmin;
 
       return (
         <Sidebar>
@@ -92,89 +98,71 @@ export const SidebarContent = NavContentBlueprint.make({
           <SidebarDivider />
           <SidebarGroup label="Menu" icon={<MenuIcon />}>
             {nav.take('page:catalog')}
-            {canProvision && nav.take('page:scaffolder')}
             <SidebarDivider />
             <SidebarScrollWrapper>
               {nav.rest({ sortBy: 'title' })}
             </SidebarScrollWrapper>
           </SidebarGroup>
 
+          {/* IDP Assistant — admin and platform only */}
           {canAssist && (
             <>
               <SidebarDivider />
               <SidebarGroup label="IDP Assistant" icon={<AssistantIcon />}>
-                <SidebarItem
-                  icon={AssistantIcon}
-                  to="/idp-assistant"
-                  text="IDP Assistant"
-                />
+                <SidebarItem icon={AssistantIcon} to="/idp-assistant" text="IDP Assistant" />
               </SidebarGroup>
             </>
           )}
 
+          {/* Monitoring — visible to all */}
           <SidebarDivider />
           <SidebarGroup label="IDP Monitoring" icon={<StorageIcon />}>
-            <SidebarItem
-              icon={StorageIcon}
-              to="/?filters[kind]=system&filters[user]=all"
-              text="By Network Code"
-            />
-            <SidebarItem
-              icon={StorageIcon}
-              to="/?filters[kind]=resource&filters[user]=all"
-              text="IDP Resources"
-            />
-            <SidebarItem
-              icon={HistoryIcon}
-              to="/create/tasks"
-              text="Audit Trail"
-            />
+            <SidebarItem icon={StorageIcon} to="/?filters[kind]=system&filters[user]=all" text="By Network Code" />
+            <SidebarItem icon={StorageIcon} to="/?filters[kind]=resource&filters[user]=all" text="IDP Resources" />
+            <SidebarItem icon={HistoryIcon} to="/create/tasks" text="Audit Trail" />
             {canViewCost && (
-              <SidebarItem
-                icon={MoneyIcon}
-                to="/cost-insights"
-                text="Cost Insights"
-              />
+              <SidebarItem icon={MoneyIcon} to="/cost-insights" text="Cost Insights" />
             )}
           </SidebarGroup>
 
-          {canProvision && (
+          {/* Deploy — dev, qa, platform, admin */}
+          {canDeployAndEnv && (
             <>
               <SidebarDivider />
-              <SidebarGroup label="Provision" icon={<AddBoxIcon />}>
-                <SidebarItem
-                  icon={AddBoxIcon}
-                  to="/create/templates/default/provision-environment"
-                  text="New Environment"
-                />
-                <SidebarItem
-                  icon={AddBoxIcon}
-                  to="/create/templates/default/provision-cockroachdb"
-                  text="New CockroachDB"
-                />
-                <SidebarItem
-                  icon={AddBoxIcon}
-                  to="/create/templates/default/provision-kafka"
-                  text="New Kafka"
-                />
+              <SidebarGroup label="Deploy" icon={<CloudUploadIcon />}>
+                <SidebarItem icon={AddBoxIcon} to="/create/templates/default/provision-environment" text="New Environment" />
+                <SidebarItem icon={CloudUploadIcon} to="/create/templates/default/deploy-application" text="Deploy Application" />
               </SidebarGroup>
             </>
           )}
 
-          {canDelete && (
+          {/* Provision Infra — infra, platform, admin */}
+          {canProvisionInfra && (
+            <>
+              <SidebarDivider />
+              <SidebarGroup label="Provision Infra" icon={<AddBoxIcon />}>
+                <SidebarItem icon={AddBoxIcon} to="/create/templates/default/provision-cockroachdb" text="New CockroachDB" />
+                <SidebarItem icon={AddBoxIcon} to="/create/templates/default/provision-kafka" text="New Kafka" />
+                <SidebarItem icon={AddBoxIcon} to="/create/templates/default/provision-kafka-topics" text="New Kafka Topics" />
+              </SidebarGroup>
+            </>
+          )}
+
+          {/* Administration — delete actions, role-gated per item */}
+          {(canDeleteEnv || canDeleteInfra) && (
             <>
               <SidebarDivider />
               <SidebarGroup label="Administration" icon={<DeleteIcon />}>
-                <SidebarItem
-                  icon={DeleteIcon}
-                  to="/create/templates/default/delete-environment"
-                  text="Delete Environment"
-                />
-                <SidebarItem
-                  icon={DeleteIcon}
-                  to="/create/templates/default/delete-infrastructure"
-                  text="Delete Infrastructure"
-                />
+                {canDeleteEnv && (
+                  <SidebarItem icon={DeleteIcon} to="/create/templates/default/delete-environment" text="Delete Environment" />
+                )}
+                {canDeleteInfra && (
+                  <>
+                    <SidebarItem icon={DeleteIcon} to="/create/templates/default/delete-infrastructure" text="Delete Infrastructure" />
+                    <SidebarItem icon={DeleteIcon} to="/create/templates/default/delete-kafka-cluster" text="Delete Kafka Cluster" />
+                    <SidebarItem icon={DeleteIcon} to="/create/templates/default/delete-kafka-topics" text="Delete Kafka Topics" />
+                  </>
+                )}
               </SidebarGroup>
             </>
           )}
@@ -183,11 +171,7 @@ export const SidebarContent = NavContentBlueprint.make({
           <SidebarDivider />
           <NotificationsSidebarItem />
           <SidebarDivider />
-          <SidebarGroup
-            label="Settings"
-            icon={<UserSettingsSignInAvatar />}
-            to="/settings"
-          >
+          <SidebarGroup label="Settings" icon={<UserSettingsSignInAvatar />} to="/settings">
             {nav.take('page:app-visualizer')}
             {nav.take('page:user-settings')}
           </SidebarGroup>

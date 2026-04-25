@@ -5,7 +5,7 @@ import {
 } from '@backstage/plugin-auth-node';
 import { oidcAuthenticator } from '@backstage/plugin-auth-backend-module-oidc-provider';
 
-const IDP_ROLES = new Set(['admin', 'platform', 'infra', 'viewer']);
+const IDP_ROLES = new Set(['admin', 'platform', 'infra', 'viewer', 'dev', 'qa']);
 
 export const keycloakAuthModule = createBackendModule({
   pluginId: 'auth',
