@@ -2,8 +2,8 @@
 import urllib.request, urllib.parse, json, sys
 
 BASE = "http://136.113.61.100:8080"
-ADMIN_USER = "newadmin"
-ADMIN_PASS = "Admin@1234"
+ADMIN_USER = "admin"
+ADMIN_PASS = "admin123"
 REALM = "backstage"
 CLIENT_ID = "backstage-client"
 
