@@ -34,9 +34,17 @@ integrations:
       token: ${GITHUB_TOKEN}
 
 auth:
+  environment: production
+  session:
+    secret: ${AUTH_SESSION_SECRET}
   providers:
-    guest:
-      dangerouslyAllowOutsideDevelopment: true
+    oidc:
+      production:
+        metadataUrl: ${KEYCLOAK_BASE_URL}/realms/backstage/.well-known/openid-configuration
+        clientId: ${KEYCLOAK_CLIENT_ID}
+        clientSecret: ${KEYCLOAK_CLIENT_SECRET}
+        scope: 'openid profile email'
+        prompt: auto
 
 scaffolder:
   defaultAuthor:
