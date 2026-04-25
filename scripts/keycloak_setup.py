@@ -28,11 +28,11 @@ def api(method, path, body=None):
         content = resp.read()
         return json.loads(content) if content else {}
     except urllib.error.HTTPError as e:
-        body = e.read().decode()
+        err = e.read().decode()
         if e.code == 409:
             print(f"  already exists, skipping")
             return None
-        print(f"  ERROR {e.code}: {body}")
+        print(f"  ERROR {e.code}: {err}")
         return None
 
 # Get client UUID
@@ -57,21 +57,66 @@ api("POST", f"/admin/realms/{REALM}/clients/{client_uuid}/protocol-mappers/model
 })
 
 # Create IDP roles
-for role in ["admin", "platform", "infra", "viewer", "dev", "qa"]:
-    print(f"Creating role '{role}'...")
+ALL_ROLES = ["admin", "platform", "infra", "viewer", "dev", "qa"]
+print("\nCreating roles...")
+for role in ALL_ROLES:
+    print(f"  role '{role}'...", end=" ")
     api("POST", f"/admin/realms/{REALM}/roles", {"name": role})
 
-# Assign admin role to testadmin
-print("Assigning admin role to testadmin...")
-users = api("GET", f"/admin/realms/{REALM}/users?username=testadmin")
-if not users:
-    print("ERROR: testadmin user not found")
-    sys.exit(1)
-user_id = users[0]["id"]
-roles = api("GET", f"/admin/realms/{REALM}/roles")
-admin_role = next((r for r in roles if r["name"] == "admin"), None)
-if not admin_role:
-    print("ERROR: admin role not found")
-    sys.exit(1)
-api("POST", f"/admin/realms/{REALM}/users/{user_id}/role-mappings/realm", [admin_role])
-print("Done! Log out of Backstage and log back in.")
+# Fetch all roles for later lookup
+all_roles = api("GET", f"/admin/realms/{REALM}/roles")
+role_map = {r["name"]: r for r in all_roles}
+
+def create_user(username, password, role):
+    print(f"\nUser '{username}' (role: {role})...")
+
+    # Create user
+    api("POST", f"/admin/realms/{REALM}/users", {
+        "username": username,
+        "enabled": True,
+        "emailVerified": True,
+        "email": f"{username}@idp.internal",
+        "firstName": username,
+        "lastName": role.capitalize(),
+        "credentials": [{
+            "type": "password",
+            "value": password,
+            "temporary": False
+        }]
+    })
+
+    # Get user ID
+    users = api("GET", f"/admin/realms/{REALM}/users?username={username}")
+    if not users:
+        print(f"  ERROR: could not find user after creation")
+        return
+    user_id = users[0]["id"]
+
+    # Assign role
+    r = role_map.get(role)
+    if not r:
+        print(f"  ERROR: role '{role}' not found")
+        return
+    api("POST", f"/admin/realms/{REALM}/users/{user_id}/role-mappings/realm", [r])
+    print(f"  OK — id={user_id}")
+
+# Test users: username, password, role
+TEST_USERS = [
+    ("testadmin",    "Test@1234",         "admin"),
+    ("platformuser1","platformuser1@123", "platform"),
+    ("infrauser1",   "infrauser1@123",    "infra"),
+    ("devuser1",     "devuser1@123",      "dev"),
+    ("qauser1",      "qauser1@123",       "qa"),
+    ("vieweruser1",  "vieweruser1@123",   "viewer"),
+]
+
+print("\nCreating test users...")
+for username, password, role in TEST_USERS:
+    create_user(username, password, role)
+
+print("\nDone! Summary of test users:")
+print(f"{'Username':<20} {'Password':<25} {'Role'}")
+print("-" * 55)
+for username, password, role in TEST_USERS:
+    print(f"{username:<20} {password:<25} {role}")
+print("\nLog out of Backstage and log back in with any of these users.")
