@@ -42,6 +42,10 @@ spec:
                 secretKeyRef:
                   name: keycloak-secret
                   key: db-password
+            - name: KC_HOSTNAME_URL
+              value: http://136.113.61.100:8080
+            - name: KC_HOSTNAME_ADMIN_URL
+              value: http://136.113.61.100:8080
           ports:
             - name: http
               containerPort: 8080
