@@ -2,18 +2,20 @@ import { createBackendModule } from '@backstage/backend-plugin-api';
 import { policyExtensionPoint } from '@backstage/plugin-permission-node/alpha';
 import {
   AuthorizeResult,
+  isResourcePermission,
   type PolicyDecision,
 } from '@backstage/plugin-permission-common';
+import {
+  catalogConditions,
+  createCatalogConditionalDecision,
+} from '@backstage/plugin-catalog-backend/alpha';
 import type {
   PermissionPolicy,
   PolicyQuery,
 } from '@backstage/plugin-permission-node';
 import type { BackstageIdentityResponse } from '@backstage/plugin-auth-node';
 
-// Permissions only admin can use
 const ADMIN_ONLY = new Set(['idp.admin.use']);
-
-// Permissions denied to viewer (allowed to infra, platform, admin)
 const VIEWER_DENIED = new Set([
   'idp.cost.view',
   'idp.assistant.use',
@@ -29,26 +31,40 @@ class IdpPermissionPolicy implements PermissionPolicy {
     request: PolicyQuery,
     user?: BackstageIdentityResponse,
   ): Promise<PolicyDecision> {
-    // Guest (dev mode) or unauthenticated — allow everything
     if (!user || user.identity.userEntityRef === 'user:default/guest') {
       return { result: AuthorizeResult.ALLOW };
     }
 
     const isAdmin = this.hasRole(user, 'admin');
-    if (isAdmin) return { result: AuthorizeResult.ALLOW };
+    const isPlatform = this.hasRole(user, 'platform');
+
+    // Admin and platform see everything
+    if (isAdmin || isPlatform) return { result: AuthorizeResult.ALLOW };
 
     const name = request.permission.name;
 
     // Admin-only actions
-    if (ADMIN_ONLY.has(name)) {
+    if (ADMIN_ONLY.has(name)) return { result: AuthorizeResult.DENY };
+
+    const isInfra = this.hasRole(user, 'infra');
+
+    // Viewer-restricted actions
+    if (VIEWER_DENIED.has(name) && !isInfra) {
       return { result: AuthorizeResult.DENY };
     }
 
-    // Viewer-restricted actions
-    const isPlatform = this.hasRole(user, 'platform');
-    const isInfra = this.hasRole(user, 'infra');
-    if (VIEWER_DENIED.has(name) && !isPlatform && !isInfra) {
-      return { result: AuthorizeResult.DENY };
+    // Catalog entity filtering — restrict template visibility by spec.owner
+    if (isResourcePermission(request.permission, 'catalog-entity')) {
+      return createCatalogConditionalDecision(request.permission, {
+        anyOf: [
+          // Non-template entities: always visible
+          { not: catalogConditions.isEntityKind({ kinds: ['Template'] }) },
+          // Template entities: check if user owns them (via template-access groups)
+          catalogConditions.isEntityOwner({
+            claims: user.identity.ownershipEntityRefs,
+          }),
+        ],
+      });
     }
 
     return { result: AuthorizeResult.ALLOW };

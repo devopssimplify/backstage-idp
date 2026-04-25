@@ -9,7 +9,7 @@ metadata:
     - kubernetes
     - environment
 spec:
-  owner: platform-team
+  owner: group:default/template-common
   type: infrastructure
 
   parameters:

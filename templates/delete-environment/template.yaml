@@ -11,7 +11,7 @@ metadata:
     - delete
     - environment
 spec:
-  owner: platform-team
+  owner: group:default/template-infra
   type: admin
 
   parameters:

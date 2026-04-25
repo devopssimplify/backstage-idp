@@ -47,10 +47,42 @@ export const keycloakAuthModule = createBackendModule({
                 .toLowerCase()
                 .replace(/[^a-z0-9-]/g, '-')}`;
 
+              // Template-access groups control which scaffolder templates the user sees.
+              // template-common   → provision-environment, provision-kafka-topics
+              // template-deploy   → deploy-application (dev/qa/platform/admin, NOT infra)
+              // template-infra    → all other templates (infra/platform/admin, NOT dev/qa)
+              const templateGroups: string[] = [];
+              const isAdmin    = idpRoles.includes('admin');
+              const isPlatform = idpRoles.includes('platform');
+              const isInfra    = idpRoles.includes('infra');
+              const isDevOrQa  = idpRoles.includes('dev') || idpRoles.includes('qa');
+
+              if (isAdmin || isPlatform) {
+                templateGroups.push(
+                  'group:default/template-common',
+                  'group:default/template-deploy',
+                  'group:default/template-infra',
+                );
+              } else if (isInfra) {
+                templateGroups.push(
+                  'group:default/template-common',
+                  'group:default/template-infra',
+                );
+              } else if (isDevOrQa) {
+                templateGroups.push(
+                  'group:default/template-common',
+                  'group:default/template-deploy',
+                );
+              }
+
               return ctx.issueToken({
                 claims: {
                   sub: userRef,
-                  ent: [userRef, ...idpRoles.map(r => `group:default/${r}`)],
+                  ent: [
+                    userRef,
+                    ...idpRoles.map(r => `group:default/${r}`),
+                    ...templateGroups,
+                  ],
                 },
               });
             },

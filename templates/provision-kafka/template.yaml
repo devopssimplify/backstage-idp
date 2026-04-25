@@ -9,7 +9,7 @@ metadata:
     - messaging
     - kubernetes
 spec:
-  owner: platform-team
+  owner: group:default/template-infra
   type: infrastructure
 
   parameters:

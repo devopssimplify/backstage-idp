@@ -9,7 +9,7 @@ metadata:
     - network-code
     - tagging
 spec:
-  owner: platform-team
+  owner: group:default/template-infra
   type: infrastructure
 
   parameters:
